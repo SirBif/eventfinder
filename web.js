@@ -9,12 +9,14 @@ var app = express.createServer(
   express.bodyParser(),
   express.cookieParser(),
   // set this to a secret value to encrypt session cookies
-  express.session({ secret: process.env.SESSION_SECRET || 'secret123' }),
+  express.session({ secret: process.env.SESSION_SECRET || 'kdcbewkbewfjhbefjhrbbkbjb89776f56dx' }),
   require('faceplate').middleware({
     app_id: process.env.FACEBOOK_APP_ID,
     secret: process.env.FACEBOOK_SECRET,
-    scope:  'user_likes,user_photos,user_photo_video_tags'
+    scope:  'user_events,friends_events'
   })
+  app.name = "prova";
+  app.id = "prova2";
 );
 
 // listen to the PORT given to us in the environment
