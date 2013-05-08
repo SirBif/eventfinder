@@ -15,12 +15,14 @@ var app = express.createServer(
     secret: process.env.FACEBOOK_SECRET,
     scope:  'user_events,friends_events'
   })
-  app.name = "prova";
-  app.id = "prova2";
 );
 
 // listen to the PORT given to us in the environment
 var port = process.env.PORT || 3000;
+
+app.set('title', 'My Site');
+app.set('name', 'My Name');
+app.set('id', 'My id');
 
 app.listen(port, function() {
   console.log("Listening on " + port);
