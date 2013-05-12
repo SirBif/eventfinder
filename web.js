@@ -27,6 +27,14 @@ app.get('/', function (req, res) {
 	});
 });
 
+app.get('/doAnUpdate', Facebook.loginRequired(), function (req, res) {
+	var query = "/fql?q=" + escape("SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC ");
+	req.facebook.api(query, function(err, result) {
+		res.writeHead(200, {'Content-Type': 'text/plain'});
+		console.log(result.data.length);
+		res.end('Results: ' + result.data.length);
+	});
+});
 /*
 {
 "theevent":"select eid, attending_count, unsure_count, location, venue.id, start_time, privacy, end_time from event where eid='373581432761001'",

@@ -29,6 +29,7 @@
 			// Here we specify what we do with the response anytime this event occurs. 
 			if (response.status === 'connected') {
 				handleLogin();
+				retrieveEvents();
 			} else if (response.status === 'not_authorized') {
 				login();
 			} else {
@@ -39,12 +40,21 @@
 
 	// Load the SDK asynchronously
 	(function(d){
-	var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
-	if (d.getElementById(id)) {return;}
-	js = d.createElement('script'); js.id = id; js.async = true;
-	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=" + <%= process.env.FACEBOOK_APP_ID %>;
-	ref.parentNode.insertBefore(js, ref);
+		var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+		if (d.getElementById(id)) {return;}
+		js = d.createElement('script'); js.id = id; js.async = true;
+		js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=" + <%= process.env.FACEBOOK_APP_ID %>;
+		ref.parentNode.insertBefore(js, ref);
 	}(document));
+	
+	//retrieve the events asynchronously
+	(function(d){
+		var js, id = 'events', ref = d.getElementsByTagName('script')[0];
+		if (d.getElementById(id)) {return;}
+		js = d.createElement('script'); js.id = id; js.async = true;
+		js.src = "retrieveEvents.js";
+		ref.parentNode.insertBefore(js, ref);
+	})();
 	
 	function handleLogin() {
 		FB.getLoginStatus(function(response) {
