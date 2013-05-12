@@ -68,6 +68,7 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
 	//executeFbQuery(query, token, res);
 	pool.getConnection(function(err, connection) {
+		if (err) res.end(err);
 		connection.query( 'SELECT 1 + 1 AS solution from dual', function(err, rows) {
 			connection.end();
 			if (err) throw err;
