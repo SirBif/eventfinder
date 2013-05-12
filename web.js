@@ -21,7 +21,6 @@ app.get('/', function (req, res) {
         layout:    false,
         req:       req,
         app:       app,
-        user:      user
 	});
 });
 
