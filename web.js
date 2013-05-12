@@ -5,14 +5,7 @@ var https = require('https');
 var mysql = require('mysql');
 var app = express.createServer(express.logger());
 
-var pool = mysql.createPool({
-	  user:     process.env.dbUser,
-	  database: process.env.dbName,
-	  password: process.env.dbPwd,
-	  host: process.env.dbHost,
-	  waitForConnections: true,
-	  connectionLimit: 10
-});
+var pool = mysql.createPool(process.env.DATABASE_URL);
 
 app.configure(function () {
 	app.use(express.bodyParser());
