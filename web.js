@@ -9,6 +9,7 @@ var pool = mysql.createPool({
 	  user:     process.env.dbUser,
 	  database: process.env.dbName,
 	  password: process.env.dbPwd,
+	  host: process.env.dbHost,
 	  waitForConnections: true,
 	  connectionLimit: 10
 });
