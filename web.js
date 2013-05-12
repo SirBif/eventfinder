@@ -76,8 +76,8 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 			connection.end();
 			if (err) throw err;
 			res.end('The solution is: ', rows[0].solution);			
-		});
-	});*/
+		});*/
+	});
 });
 /*
 {
