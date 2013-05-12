@@ -70,7 +70,7 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	pool.getConnection(function(err, connection) {
 		if (err) res.end(err);
 		console.log(connection);
-		res.end(connection);
+		res.end('mah');
 		/*
 		connection.query( 'SELECT 1 + 1 AS solution from dual', function(err, rows) {
 			connection.end();
