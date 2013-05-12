@@ -1,7 +1,8 @@
 var express = require('express');
 var Facebook = require('facebook-node-sdk');
+var ejs = require('ejs');
 
-var app = express.createServer(express.logger());
+var app = express();
 
 app.configure(function () {
 	app.use(express.bodyParser());
