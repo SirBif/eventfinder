@@ -16,6 +16,8 @@ app.listen(port, function() {
   console.log("Listening on " + port);
 });
 
+app.engine('.html', require('jade'));
+
 app.get('/', function (req, res) {
 	res.render('index.html', {
         layout:    false,
