@@ -1,6 +1,6 @@
 var express = require('express');
 var Facebook = require('facebook-node-sdk');
-var ejs = require('ejs');
+var util    = require('util');
 
 var app = express();
 
