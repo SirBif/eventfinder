@@ -51,7 +51,7 @@
 			if (response.status === 'connected') {
 				var uid = response.authResponse.userID;
 				var accessToken = response.authResponse.accessToken;
-				fetchUserInfo(uid).then(updateIfNeeded(userInfo, uid, accessToken));
+				fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken););
 			}
 		});
 	}
