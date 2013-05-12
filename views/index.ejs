@@ -17,7 +17,7 @@
 <script>
 	Parse.initialize("uB7oZlwqkTF3eqebbh9rsL15upvDsKyfKa7O8Bmn", "3f0zSS9G5GRrICBYHRbkeb8ee8k9mSBu6t59NyBi");
 	window.fbAsyncInit = function() {
-		retrieveEvents().then(function(results) {printResults(results)});
+		//retrieveEvents().then(function(results) {printResults(results)});
 		
 		Parse.FacebookUtils.init({
 			appId      : <%= process.env.FACEBOOK_APP_ID %>, // Facebook App ID
@@ -28,8 +28,7 @@
 		FB.Event.subscribe('auth.authResponseChange', function(response) {
 			// Here we specify what we do with the response anytime this event occurs. 
 			if (response.status === 'connected') {
-				//cloudUpdate();
-				updateEvents();
+				handleLogin();
 			} else if (response.status === 'not_authorized') {
 				login();
 			} else {
@@ -46,6 +45,39 @@
 	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=" + <%= process.env.FACEBOOK_APP_ID %>;
 	ref.parentNode.insertBefore(js, ref);
 	}(document));
+	
+	function handleLogin() {
+		FB.getLoginStatus().then(function(response) {
+			if (response.status === 'connected') {
+				var uid = response.authResponse.userID;
+				var accessToken = response.authResponse.accessToken;
+				fetchUserInfo(uid).then(updateIfNeeded(userInfo, uid, accessToken));
+			}
+		});
+	}
+	
+	function fetchUserInfo(uid) {
+		var FacebookUser = Parse.Object.extend("FacebookUser");
+		var query = new Parse.Query(FacebookUser);
+		query.equal("uid", uid);
+		return query.first();
+	}
+	
+	function updateIfNeeded(userInfo, uid, accessToken) {
+		var beforeThisItsTooOld = moment().add('days', -1);
+		if(userInfo == undefined) {
+			var FacebookUser = Parse.Object.extend("FacebookUser");
+			userInfo = new FacebookUser();
+			userInfo.set("uid", uid);
+		}
+		if((userInfo.last_update == undefined)|| (userInfo.last_update < beforeThisItsTooOld)) {
+			$.get("/doAnUpdate", {uid: uid, token : accessToken}).then(function() {
+				userInfo.set("last_update", new Date());
+				userInfo.set("token", accessToken);
+				userInfo.save();
+			});
+		}
+	}
 	
 	function printResults(results) {
 		if (!document.getElementsByTagName) return;
