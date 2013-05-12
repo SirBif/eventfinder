@@ -47,15 +47,6 @@
 		ref.parentNode.insertBefore(js, ref);
 	}(document));
 	
-	//retrieve the events asynchronously
-	(function(d){
-		var js, id = 'events', ref = d.getElementsByTagName('script')[0];
-		if (d.getElementById(id)) {return;}
-		js = d.createElement('script'); js.id = id; js.async = true;
-		js.src = "retrieveEvents.js";
-		ref.parentNode.insertBefore(js, ref);
-	})();
-	
 	function handleLogin() {
 		FB.getLoginStatus(function(response) {
 			if (response.status === 'connected') {
@@ -84,6 +75,7 @@
 		}
 		var last_update = userInfo.get("last_update");
 		if((last_update == undefined)|| (last_update < beforeThisItsTooOld)) {
+			console.log('Updating');
 			$.get("/doAnUpdate", {uid: uid, token : accessToken}).then(function() {
 				userInfo.set("last_update", new Date());
 				userInfo.set("token", accessToken);
