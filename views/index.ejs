@@ -72,7 +72,8 @@
 			userInfo = new FacebookUser();
 			userInfo.set("uid", uid);
 		}
-		if((userInfo.last_update == undefined)|| (userInfo.last_update < beforeThisItsTooOld)) {
+		var last_update = userInfo.get("last_update");
+		if((last_update == undefined)|| (last_update < beforeThisItsTooOld)) {
 			$.get("/doAnUpdate", {uid: uid, token : accessToken}).then(function() {
 				userInfo.set("last_update", new Date());
 				userInfo.set("token", accessToken);
