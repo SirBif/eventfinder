@@ -5,7 +5,8 @@
     "express":   "2.5.1",
 	"facebook-node-sdk" : "0.2.x",
 	"async":     "0.1.18",
-    "ejs":       "0.4.3"
+    "ejs":       "0.4.3",
+	"mysql": "2.0.0-alpha8"
   },
   "engines": {
     "node": "0.10.x",

@@ -5,6 +5,15 @@ var https = require('https');
 var Client = require('mysql').Client;
 var app = express.createServer(express.logger());
 
+var pool  = mysql.createPool(
+	  user:     process.env.dbUser,
+	  database: process.env.dbName,
+	  password: process.env.dbPwd,
+	  host:     process.env.dbHost,
+	  waitForConnections: true,
+	  connectionLimit: 10
+);
+
 app.configure(function () {
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
@@ -13,17 +22,6 @@ app.configure(function () {
 	app.set('title', 'Event Finder');
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');
-	var client = mysql.createClient({
-	  user:     process.env.dbUser,
-	  database: process.env.dbName,
-	  password: process.env.dbPwd,
-	  host:     process.env.dbHost
-	});
-	client.connect();
-	app.use(function(req, res, next) {
-		req.mysql = client;
-		next();
-	});
 });
 
 var port = process.env.PORT || 5000;
@@ -69,9 +67,12 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	var token = req.query["token"]
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
 	//executeFbQuery(query, token, res);
-	req.mysql.query('SELECT 1 + 1 AS solution from dual', function(err, rows, fields) {
-		if (err) throw err;
-		res.end('The solution is: ', rows[0].solution);
+	pool.getConnection(function(err, connection) {
+		connection.query( 'SELECT 1 + 1 AS solution from dual', function(err, rows) {
+			connection.end();
+			if (err) throw err;
+			res.end('The solution is: ', rows[0].solution);			
+		});
 	});
 });
 /*
