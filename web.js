@@ -48,7 +48,7 @@ function executeFbQuery(query, token, res) {
 	myReq.end();
 
 	myReq.on('error', function(e) {
-	  res.end("token: " + CAACkb4ONbgoBAFpn0fFKAvHgtGmOIByYJIydcHxDFCN0kNFqFUW1KXGeWDpNsTZA9c8m6yuwTdzW4dPJDKAstc8djqAZBC2voE7ggTLbpqMkgSd4pyIhbbnmZBuO8XlMkhg6ujRkBwVt2CzITCowVhrDMOmJTdhHpHpMgUPTgZDZD);
+	  res.end("token: " + token);
 	});
 }
 
