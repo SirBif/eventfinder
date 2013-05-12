@@ -1,5 +1,6 @@
 var express = require('express');
 var Facebook = require('facebook-node-sdk');
+var ejs = require('ejs');
 
 var app = express();
 
@@ -11,7 +12,7 @@ app.configure(function () {
 	app.set('title', 'Event Finder');
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');
-	app.engine('html', require('ejs').renderFile);
+	app.engine('html', ejs.renderFile);
 });
 
 var port = process.env.PORT || 3000;
