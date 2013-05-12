@@ -2,7 +2,7 @@ var express = require('express');
 var Facebook = require('facebook-node-sdk');
 var util    = require('util');
 var https = require('https');
-var mysql = require('mysql').Client;
+var mysql = require('mysql');
 var app = express.createServer(express.logger());
 
 var pool = mysql.createPool({
