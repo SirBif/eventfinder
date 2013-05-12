@@ -10,6 +10,8 @@ app.configure(function () {
 	app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
 	app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
 	app.set('title', 'Event Finder');
+	app.set('views', __dirname + '/views');
+	app.set('view engine', 'ejs');
 });
 
 var port = process.env.PORT || 3000;
