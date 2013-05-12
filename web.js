@@ -68,9 +68,9 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	//executeFbQuery(query, token, res);
 	pool.getConnection(function(err, connection) {
 		console.log("inside get connection");
-		console.log(connection);
+		console.log("ML:"+connection);
 		console.log("after conn");
-		console.log(err);
+		console.log("ML:"+err);
 		if (err) { res.end(err);}
 		if(connection == undefined) { 
 		    res.end('Connection error');
