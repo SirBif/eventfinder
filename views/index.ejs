@@ -63,8 +63,9 @@
 		return query.first();
 	}
 	
-	function updateIfNeeded(userInfo, uid, accessToken) {
+	function updateIfNeeded(user, uid, accessToken) {
 		var beforeThisItsTooOld = moment().add('days', -1);
+		var userInfo = user;
 		console.log(userInfo);
 		if(userInfo == undefined) {
 			var FacebookUser = Parse.Object.extend("FacebookUser");
