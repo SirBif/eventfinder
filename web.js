@@ -40,8 +40,7 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 		res.end('Results: ' + result.uid);
 	}, function(err, result) {
 		res.writeHead(200, {'Content-Type': 'text/plain'});
-		console.log(err);
-		res.end(err.message);
+		res.end(err.message + " token: " + token);
 	});
 });
 /*
