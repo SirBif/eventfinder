@@ -2,7 +2,7 @@
   "name": "event-finder",
   "version": "0.0.1",
   "dependencies": {
-    "express": "3.1.x",
+    "express":   "2.4.6",
 	"facebook-node-sdk" : "0.2.x",
 	"async":     "0.1.18",
     "ejs":       "0.4.3"

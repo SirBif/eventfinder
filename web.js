@@ -2,7 +2,7 @@ var express = require('express');
 var Facebook = require('facebook-node-sdk');
 var util    = require('util');
 
-var app = express();
+var app = express.createServer(express.logger());
 
 app.configure(function () {
 	app.use(express.bodyParser());
