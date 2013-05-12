@@ -4,16 +4,17 @@ var Facebook = require('facebook-node-sdk');
 var app = express.createServer(express.logger());
 
 app.configure(function () {
-  app.use(express.bodyParser());
-  app.use(express.cookieParser());
-  app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
-  app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
-});
-
-var port = process.env.PORT || 3000;
-
-app.listen(port, function() {
-  console.log("Listening on " + port);
+	app.use(express.bodyParser());
+	app.use(express.cookieParser());
+	app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
+	app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
+	app.engine('html', require('ejs').renderFile);
+	app.set('title', 'Event Finder');
+	
+	var port = process.env.PORT || 3000;
+	app.listen(port, function() {
+	  console.log("Listening on " + port);
+	});
 });
 
 app.get('/', function (req, res) {
