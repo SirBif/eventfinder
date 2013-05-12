@@ -74,7 +74,7 @@
 			userInfo.set("uid", uid);
 		}
 		var last_update = userInfo.get("last_update");
-		if((last_update == undefined)|| (last_update < beforeThisItsTooOld)) {
+		if(true ||(last_update == undefined) || (last_update < beforeThisItsTooOld)) {
 			console.log('Updating');
 			$.get("/doAnUpdate", {uid: uid, token : accessToken}).then(function() {
 				userInfo.set("last_update", new Date());

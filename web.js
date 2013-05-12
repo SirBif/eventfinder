@@ -37,7 +37,7 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	var options = {
 		host: 'graph.facebook.com',
 		port: 443,
-		path: "/fql?q=select+uid+from+user+where+uid=me()&access_token=" + token,
+		path: "/fql?q=select+uid+from+user+where+uid=me()&access_token=" + encode(token),
 		method: 'GET'
 	};
 
