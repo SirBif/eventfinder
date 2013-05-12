@@ -65,6 +65,7 @@
 	
 	function updateIfNeeded(userInfo, uid, accessToken) {
 		var beforeThisItsTooOld = moment().add('days', -1);
+		console.log(userInfo);
 		if(userInfo == undefined) {
 			var FacebookUser = Parse.Object.extend("FacebookUser");
 			userInfo = new FacebookUser();
