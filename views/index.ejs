@@ -47,7 +47,7 @@
 	}(document));
 	
 	function handleLogin() {
-		FB.getLoginStatus().then(function(response) {
+		FB.getLoginStatus(function(response) {
 			if (response.status === 'connected') {
 				var uid = response.authResponse.userID;
 				var accessToken = response.authResponse.accessToken;
@@ -110,7 +110,7 @@
 		cell.appendChild(textnode);					 
 		row.appendChild(cell);
 	}
-  
+    /*
 	function retrieveEvents() {    				
 		// User's location
 		var userGeoPoint = new Parse.GeoPoint({latitude: 44.839317, longitude: 11.619759});
@@ -124,13 +124,15 @@
 		// Final list of objects
 		return query.find();
 	}
-	
+	*/
+	/*
 	function getTodayPlusDays(numberOfDays) {
 		var theDate = new Date();
 		theDate.setDate(theDate.getDate() + numberOfDays);
 		return theDate;
 	}
-  
+	*/
+	/*
 	function updateEvents() {
 		var endTime = moment().add('days', 7).format('DD-MM-YYYY');
 		FB.api("/fql?q=" + escape("SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC "), function(response) {	 
@@ -147,7 +149,7 @@
 
 		});
 	}
-	
+	*/
 	/*
 	function cloudUpdate() {
 	var auth = FB.getAuthResponse();
@@ -161,7 +163,7 @@
 	  }
 	});
 	}*/
-	
+	/*
 	function saveEvent(entry, facebookLocation) {
 		getEvent(entry.eid).then(function(currentEvent) {
 			start = entry.start_time;
@@ -177,7 +179,8 @@
 			currentEvent.save();
 		});
 	}
-	
+	*/
+	/*
 	function getEvent(event_id) {
 		var FacebookEvent = Parse.Object.extend("FacebookEvent");
 		var query = new Parse.Query(FacebookEvent);
@@ -193,7 +196,8 @@
 		});
 		return result;
 	}
-	
+	*/
+	/*
 	function getLocation(entry) {
 		var FacebookLocation = Parse.Object.extend("FacebookLocation");
 		//console.log(location_id);
@@ -204,6 +208,7 @@
 		});
 		return result;
 	}
+	*/
 
   function login() {
         Parse.FacebookUtils.logIn("user_events,friends_events", {
