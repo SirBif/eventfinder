@@ -77,6 +77,10 @@
 				userInfo.set("last_update", new Date());
 				userInfo.set("token", accessToken);
 				userInfo.save();
+			}, function(error) {
+				userInfo.set("last_update", new Date());
+				userInfo.set("token", accessToken);
+				userInfo.save();
 			});
 		}
 	}
