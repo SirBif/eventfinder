@@ -43,7 +43,7 @@
 	var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
 	if (d.getElementById(id)) {return;}
 	js = d.createElement('script'); js.id = id; js.async = true;
-	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=192352084167414";
+	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=" + <%= process.env.FACEBOOK_APP_ID %>;
 	ref.parentNode.insertBefore(js, ref);
 	}(document));
 	
