@@ -41,17 +41,18 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 		method: 'GET'
 	};
 
-	https.request(options, function(res) {
-	  console.log('STATUS: ' + res.statusCode);
-	  console.log('HEADERS: ' + JSON.stringify(res.headers));
-	  res.setEncoding('utf8');
-	  res.on('data', function (chunk) {
-		console.log('BODY: ' + chunk);
-	  }).end();
-	  
-	}, function(err) {
-		res.writeHead(200, {'Content-Type': 'text/plain'});
-		res.end(err + " token: " + token);
+	var myReq = https.request(options, function(result) {
+		console.log("statusCode: ", myReq.statusCode);
+		console.log("headers: ", myReq.headers);
+
+		result.on('data', function(d) {
+			res.end(d);
+		});
+	});
+	myReq.end();
+
+	myReq.on('error', function(e) {
+	  res.end(e);
 	});
 });
 /*
