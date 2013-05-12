@@ -29,15 +29,11 @@ app.get('/', function (req, res) {
 	});
 });
 
-app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_events"}), function (req, res) {
-	var token = req.token;
-	var query = "/fql?q=" + escape("SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC ");
-	//	var completeQuery = '/me' + '?access_token=' + escape(token);
-	//req.facebook.api(completeQuery, 
+function executeFbQuery(query, token, res) {
 	var options = {
 		host: 'graph.facebook.com',
 		port: 443,
-		path: "/fql?q=select+uid+from+user+where+uid=me()&access_token=" + encode(token),
+		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET'
 	};
 
@@ -54,6 +50,14 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	myReq.on('error', function(e) {
 	  res.end(e);
 	});
+}
+
+app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_events"}), function (req, res) {
+	var token = req.token;
+	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
+	//	var completeQuery = '/me' + '?access_token=' + escape(token);
+	//req.facebook.api(completeQuery, 
+	executeFbQuery("select uid from user where uid=me()", token, res);
 });
 /*
 {
