@@ -10,11 +10,11 @@ app.configure(function () {
 	app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
 	app.engine('html', require('ejs').renderFile);
 	app.set('title', 'Event Finder');
-	
-	var port = process.env.PORT || 3000;
-	app.listen(port, function() {
-	  console.log("Listening on " + port);
-	});
+});
+
+var port = process.env.PORT || 3000;
+app.listen(port, function() {
+  console.log("Listening on " + port);
 });
 
 app.get('/', function (req, res) {
