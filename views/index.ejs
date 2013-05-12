@@ -59,7 +59,7 @@
 	function fetchUserInfo(uid) {
 		var FacebookUser = Parse.Object.extend("FacebookUser");
 		var query = new Parse.Query(FacebookUser);
-		query.equal("uid", uid);
+		query.equalTo("uid", uid);
 		return query.first();
 	}
 	
