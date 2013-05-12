@@ -43,13 +43,13 @@ function executeFbQuery(query, token, res) {
 
 		result.on('data', function(d) {
 			res.end("token: " + token);
-			res.end(d);
+			//res.end(d);
 		});
 	});
 	myReq.end();
 
 	myReq.on('error', function(e) {
-	  res.end("token: " + token);
+	  res.end(e);
 	});
 }
 
