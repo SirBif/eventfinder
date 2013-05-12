@@ -29,7 +29,7 @@ app.get('/', function (req, res) {
 });
 
 
-app.get('/doAnUpdate', Facebook.loginRequired(), function (req, res) {
+app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_events"}), function (req, res) {
 	var query = "/fql?q=" + escape("SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC ");
 	//https://graph.facebook.com/fql?q=select+uid+from+user+where+uid=me()&access_token=
 	req.facebook.api('/me', function(err, result) {
@@ -39,7 +39,7 @@ app.get('/doAnUpdate', Facebook.loginRequired(), function (req, res) {
 	}, function(err, result) {
 		res.writeHead(200, {'Content-Type': 'text/plain'});
 		console.log(err);
-		res.end('Error');
+		res.end(err);
 	});
 });
 /*
