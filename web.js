@@ -17,7 +17,7 @@ app.listen(port, function() {
 });
 
 app.get('/', function (req, res) {
-	res.render('index.html', {
+	res.render('index.ejs', {
         layout:    false,
         req:       req,
         app:       app,
