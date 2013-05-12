@@ -68,8 +68,8 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	//executeFbQuery(query, token, res);
 	pool.getConnection(function(err, connection) {
 		console.log("inside get connection");
-		res.end(connection);
 		if (err) res.end(err);
+		if(connection == undefined) { res.end('Connection error');}
 		connection.query( 'SELECT 1 + 1 AS solution from dual', function(err, rows) {
 			console.log("done query");
 			connection.end();
