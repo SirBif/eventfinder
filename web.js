@@ -19,27 +19,27 @@ app.listen(port, function() {
   console.log("Listening on " + port);
 });
 
-/*
+
 app.get('/', function (req, res) {
 	res.render('index.ejs', {
         layout:    false,
         req:       req,
         app:       app,
 	});
-});*/
-app.get('/', Facebook.loginRequired(), function (req, res) {
-      req.facebook.api('/me', function(err, user) {
-        res.writeHead(200, {'Content-Type': 'text/plain'});
-        res.end('Hello, ' + user.name + '!');
-      });
-    });
+});
+
 
 app.get('/doAnUpdate', Facebook.loginRequired(), function (req, res) {
 	var query = "/fql?q=" + escape("SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC ");
+	//https://graph.facebook.com/fql?q=select+uid+from+user+where+uid=me()&access_token=
 	req.facebook.api('/me', function(err, result) {
 		res.writeHead(200, {'Content-Type': 'text/plain'});
 		console.log(result.data.length);
 		res.end('Results: ' + result.data.length);
+	}, function(err, result) {
+		res.writeHead(200, {'Content-Type': 'text/plain'});
+		console.log(err);
+		res.end('Error');
 	});
 });
 /*
