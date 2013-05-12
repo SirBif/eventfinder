@@ -70,12 +70,14 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	pool.getConnection(function(err, connection) {
 		if (err) res.end(err);
 		console.log(connection);
+		res.end(connection);
+		/*
 		connection.query( 'SELECT 1 + 1 AS solution from dual', function(err, rows) {
 			connection.end();
 			if (err) throw err;
 			res.end('The solution is: ', rows[0].solution);			
 		});
-	});
+	});*/
 });
 /*
 {
