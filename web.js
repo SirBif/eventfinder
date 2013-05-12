@@ -41,7 +41,7 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 		method: 'GET'
 	};
 
-	http.request(options, function(res) {
+	https.request(options, function(res) {
 	  console.log('STATUS: ' + res.statusCode);
 	  console.log('HEADERS: ' + JSON.stringify(res.headers));
 	  res.setEncoding('utf8');
