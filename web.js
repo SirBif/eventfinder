@@ -8,7 +8,6 @@ app.configure(function () {
 	app.use(express.cookieParser());
 	app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
 	app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
-	app.engine('html', require('ejs').renderFile);
 	app.set('title', 'Event Finder');
 });
 
