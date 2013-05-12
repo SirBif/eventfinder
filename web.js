@@ -16,13 +16,13 @@ app.listen(port, function() {
   console.log("Listening on " + port);
 });
 
-app.get('/', Facebook.loginRequired(), function (req, res) {
-  req.facebook.api("/fql?q=" + escape("SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC ")
-  , function(err, result) {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-	console.log(result);
-    res.end(result);
-  });
+app.get('/', function (req, res) {
+	res.render('index.html', {
+        layout:    false,
+        req:       req,
+        app:       app,
+        user:      user
+	});
 });
 
 /*
