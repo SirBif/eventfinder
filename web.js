@@ -48,7 +48,7 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 	  res.on('data', function (chunk) {
 		console.log('BODY: ' + chunk);
 	  });
-	}, function(err, result) {
+	}, function(err) {
 		res.writeHead(200, {'Content-Type': 'text/plain'});
 		res.end(err.message + " token: " + token);
 	});
