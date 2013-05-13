@@ -1,0 +1,9 @@
+CLEARDB_DATABASE_URL=mysql://b316081821a16a:ec683a67@eu-cdbr-west-01.cleardb.com/heroku_bf63dc9a9f579aa?reconnect=true
+DATABASE_URL=mysql://b316081821a16a:ec683a67@eu-cdbr-west-01.cleardb.com/heroku_bf63dc9a9f579aa?reconnect=true
+FACEBOOK_APP_ID=180798855409162
+FACEBOOK_SECRET=7d5b6a35d8c08d6aac512b6d85243a2f
+NODE_ENV=development
+dbName=heroku_bf63dc9a9f579aa
+dbPwd=ec683a67
+dbUser=b316081821a16a
+
