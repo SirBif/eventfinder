@@ -48,7 +48,8 @@ function executeFbQuery(query, token, res) {
 			    res.end(d.length);
 			    saveEventsOnDb(d);
 			} catch(err) {
-			   res.end(e); 
+			    console.log(err);
+			   res.end('Error'); 
 			}
 		});
 	});
@@ -73,14 +74,12 @@ function saveEventsOnDb(data) {
     var length = data.length;
     element = null;
     for (var i = 0; i < length; i++) {
-      element = arr[i];
-      client.query("INSERT INTO events(id, start_time) values($1, $2)", [element.eid, element.start_time]);
-    }
-    done();
-    
-    query.on('error', function(error) { 
-      res.end(error);
-    });
+      element = data[i];
+      var query = client.query("INSERT INTO events(id, start_time) values($1, $2)", [element.eid, element.start_time]);
+      query.on('error', function(error) {
+        console.log('sql error');
+      });
+    };
 };
 /*
 {
