@@ -59,19 +59,18 @@ app.get('/doAnUpdate', function (req, res) {
 
 app.get('/sql', function (req, res) {
     var dbURL = process.env.DATABASE_URL;
-    console.log(dbURL);
-    require('any-db').then(function(anyDB) {
-	    anyDB.createConnection(dbURL).then(function(conn){
-	        var sql = 'select 1 from dual';
-	        conn.query(sql, function (error, result) {
-	            if(error) {
-	                res.end(error);
-	            } else {
-	                res.end(result);
-	            }
-	        }) ;
-	        conn.end();
-	    });
+    //console.log(dbURL);
+    var anyDB = require('any-db');
+    anyDB.createConnection(dbURL).then(function(conn){
+        var sql = 'select 1 from dual';
+        conn.query(sql, function (error, result) {
+            if(error) {
+                res.end(error);
+            } else {
+                res.end(result);
+            }
+        }) ;
+        conn.end();
     });
 });
 /*
