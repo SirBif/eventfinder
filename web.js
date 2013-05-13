@@ -2,10 +2,8 @@ var express = require('express');
 var Facebook = require('facebook-node-sdk');
 var util    = require('util');
 var https = require('https');
-var mysql = require('mysql');
+var pg = require('pg');
 var app = express.createServer(express.logger());
-
-var pool = mysql.createPool(process.env.DATABASE_URL);
 
 app.configure(function () {
 	app.use(express.bodyParser());
@@ -32,27 +30,19 @@ app.get('/', function (req, res) {
 });
 
 function executeFbQuery(query, token, res) {
-	var options = {
-		host: 'graph.facebook.com',
-		port: 443,
-		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-		method: 'GET'
-	};
+	pg.connect(process.env.DATABASE_URL, function(err, client) {
+    var query = client.query('SELECT 1+1 FROM dual');
 
-	var myReq = https.request(options, function(result) {
-		console.log("statusCode: ", myReq.statusCode);
-		console.log("headers: ", myReq.headers);
-
-		result.on('data', function(d) {
-			//res.end("token: " + token);
-			res.end(d);
-		});
-	});
-	myReq.end();
-
-	myReq.on('error', function(e) {
-	  res.end(e);
-	});
+    query.on('row', function(row) {
+        console.log(JSON.stringify(row));
+        res.end(JSON.stringify(row));
+      });
+    });
+    
+    query.on('error', function(row) {
+        res.end('Error');
+      });
+    });
 }
 
 app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_events"}), function (req, res) {
