@@ -63,9 +63,6 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 });
 
 app.get('/sql', function (req, res) {
-	pool.on('error', function(err) {
-		console.log("ERROR: " + err.code);
-	});
 	pool.getConnection(function(err, connection) {
 		connection.on('error', function(err) {
 			console.log("ERROR: " + err.code);
