@@ -63,16 +63,17 @@ app.get('/sql', function (req, res) {
 	var a = 0;
 	var conString = process.env.DATABASE_URL;
 
-	var pool = anyDB.createPool(conString, {min: 1, max: 20});
+	var conn = anyDB.createConnection(conString);
 
     var sql = 'SELECT 1+1 FROM my_dual'
-	pool.query(sql, function (error, result) {
+	conn.query(sql, function (error, result) {
 	    if(error) {
 	        res.end(error);
 	    } else {
 	        res.end(result);
 	    }
 	}) ;
+	conn.end();
 });
 /*
 {
