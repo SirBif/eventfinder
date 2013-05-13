@@ -62,7 +62,7 @@ app.get('/sql', function (req, res) {
 	var anyDb = require('any-db');
 	var conString = process.env.DATABASE_URL;
 
-	var pool = anyDB.createPool(conString, {min: 1, max: 20})
+	var pool = anyDb.createPool(conString, {min: 1, max: 20})
 
     var sql = 'SELECT 1+1 FROM my_dual'
 	pool.query(sql, function (error, result) {
