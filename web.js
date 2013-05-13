@@ -63,20 +63,25 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 });
 
 app.get('/sql', function (req, res) {
-	console.log(req);
 	pool.getConnection(function(err, connection) {
-		if (err !== undefined) { 
-			console.log("Connection error: " + err);
+		connection.on('error', function(err) {
+			console.log(err.code);
+		});
+		if (err) { 
 			res.end(err);
 			throw err;
 		} else {
 		    connection.query( 'SELECT 1 + 1 AS solution from dual', function(err, rows) {
 			    connection.end();
-			    if (err !== undefined) {
-					res.end('The solution is: ', rows[0].solution);	
+			    if (err) {
+					res.end(err);
 					throw err;
+				} else {
+					res.end('The solution is: ', rows[0].solution);	
 				}
 		    });
+			
+			
 		}
 	});
 });
