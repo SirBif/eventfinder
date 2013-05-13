@@ -1,6 +1,10 @@
 var express = require('express');
 var util    = require('util');
 var https = require('https');
+var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
+var conString = process.env.DATABASE_URL;
+var client = new pg.Client(conString);
+
 var app = express.createServer();
 
 app.configure(function () {
@@ -39,8 +43,9 @@ function executeFbQuery(query, token, res) {
 		console.log("headers: ", myReq.headers);
 
 		result.on('data', function(d) {
-			//res.end("token: " + token);
-			res.end(d);
+			var theArray = d.data;
+			res.end(theArray.length);
+			saveEventsOnDb(theArray);
 		});
 	});
 	myReq.end();
@@ -56,31 +61,18 @@ app.get('/doAnUpdate', function (req, res) {
 	executeFbQuery(query, token, res);
 });
 
-app.get('/sql', function (req, res) {
-    var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
-    var conString = process.env.DATABASE_URL;
-
-    var client = new pg.Client(conString);
+function saveEventsOnDb(data) {
     client.connect();
 
     //queries are queued and executed one after another once the connection becomes available
-    client.query("CREATE TEMP TABLE beatles(name varchar(10), height integer, birthday timestamptz)");
-    client.query("INSERT INTO beatles(name, height, birthday) values($1, $2, $3)", ['John', 68, new Date(1944, 10, 13)]);
-    var query = client.query("SELECT * FROM beatles WHERE name = $1", ['John']);
-
-    //can stream row results back 1 at a time
-    query.on('row', function(row) {
-      console.log(row);
-      console.log("Beatle name: %s", row.name); //Beatle name: John
-      console.log("Beatle birth year: %d", row.birthday.getYear()); //dates are returned as javascript dates
-      console.log("Beatle height: %d' %d\"", Math.floor(row.height/12), row.height%12); //integers are returned as javascript ints
-      res.end(row.name);
-    });
-
-    //fired after last row is emitted
-    query.on('end', function() { 
-      client.end();
-    });
+    client.query("CREATE TABLE events(id integer, start_time timestamptz, stuff varchar(10))");
+    var length = data.length,
+    element = null;
+    for (var i = 0; i < length; i++) {
+      element = arr[i];
+      client.query("INSERT INTO events(id, start_time) values($1, $2)", [element.eid, element.start_time]);
+    }
+    done();
     
     query.on('error', function(error) { 
       res.end(error);
