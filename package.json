@@ -6,9 +6,9 @@
 	"facebook-node-sdk" : "0.2.x",
 	"async":     "0.1.18",
     "ejs":       "0.4.3",
-    "any-db-pool": "0.0.6",
-	"any-db": "0.4.x",
-	"pg": "0.7.x"
+    "pg": "0.7.x",
+	"any-db": "0.5.0"
+	
   },
   "engines": {
     "node": "0.10.x",
