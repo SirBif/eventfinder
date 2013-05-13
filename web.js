@@ -14,6 +14,7 @@ app.configure(function () {
 	app.set('title', 'Event Finder');
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');
+    app.use(express.errorHandler({ dumpExceptions:false, showStack:true }));
 });
 
 var port = process.env.PORT || 5000;
