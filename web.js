@@ -43,7 +43,7 @@ function executeFbQuery(query, token, res) {
 		console.log("headers: ", myReq.headers);
 
 		result.on('data', function(d) {
-			res.end(theArray.length);
+			res.end(d.length);
 			saveEventsOnDb(d);
 		});
 	});
