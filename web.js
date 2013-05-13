@@ -1,13 +1,12 @@
 var express = require('express');
 var util    = require('util');
 var https = require('https');
-var app = express();
+var app = express.createServer();
 
 app.configure(function () {
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
 	app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
-	//app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
 	app.set('title', 'Event Finder');
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');

@@ -7,7 +7,6 @@ app.configure(function () {
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
 	app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
-	//app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
 	app.set('title', 'Event Finder');
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');
@@ -59,7 +58,7 @@ app.get('/doAnUpdate', function (req, res) {
 
 app.get('/sql', function (req, res) {
     var dbURL = process.env.DATABASE_URL;
-    console.log(dbURL);
+    //console.log(dbURL);
     var anyDB = require('any-db');
     anyDB.createConnection(dbURL).then(function(conn){
         var sql = 'select 1 from dual';
