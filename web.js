@@ -68,7 +68,7 @@ app.get('/sql', function (req, res) {
 	});
 	pool.getConnection(function(err, connection) {
 		connection.on('error', function(err) {
-			console.log(("ERROR: " + err.code);
+			console.log("ERROR: " + err.code);
 		});
 		if (err) { 
 			res.end(err);
