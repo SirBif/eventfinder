@@ -72,7 +72,6 @@ app.get('/sql', function (req, res) {
 	        res.end(result);
 	    }
 	}) ;
-	conn.end();
 });
 /*
 {
