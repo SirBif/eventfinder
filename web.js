@@ -60,12 +60,11 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 
 app.get('/sql', function (req, res) {
 	var anyDB = require('any-db');
-	var a = 0;
 	var conString = process.env.DATABASE_URL;
 
 	var conn = anyDB.createConnection(conString);
 
-    var sql = 'SELECT 1+1 FROM my_dual'
+    var sql = 'SELECT 1+1 FROM my_dual';
 	conn.query(sql, function (error, result) {
 	    if(error) {
 	        res.end(error);
