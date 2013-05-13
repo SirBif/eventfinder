@@ -60,6 +60,7 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 
 app.get('/sql', function (req, res) {
 	var anyDB = require('any-db');
+	var a = 0;
 	var conString = process.env.DATABASE_URL;
 
 	var pool = anyDB.createPool(conString, {min: 1, max: 20});
