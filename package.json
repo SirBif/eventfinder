@@ -7,7 +7,8 @@
 	"async":     "0.1.18",
     "ejs":       "0.4.3",
     "any-db-pool": "0.0.6",
-	"any-db": "0.4.x"
+	"any-db": "0.4.x",
+	"pg": "0.7.x"
   },
   "engines": {
     "node": "0.10.x",
