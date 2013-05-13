@@ -53,18 +53,17 @@ function executeFbQuery(query, token, res) {
 }
 app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_events"}), function (req, res) {
 	console.log(req);
-	var token = req.query["token"]
+	var token = req.query["token"];
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
 	executeFbQuery(query, token, res);
 });
 
 app.get('/sql', function (req, res) {
-	var anyDB = require('any-db');
-	var conString = process.env.DATABASE_URL;
+	var anyDB = require('any-db')
+    var dbURL = 'driver://user:pass@hostname/database'
+	var conn = anyDB.createConnection(dbURL);
 
-	var conn = anyDB.createConnection(conString);
-
-    var sql = 'SELECT 1+1 FROM my_dual';
+	var sql = 'select 1 from dual';
 	conn.query(sql, function (error, result) {
 	    if(error) {
 	        res.end(error);
