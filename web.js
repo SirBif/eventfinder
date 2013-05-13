@@ -1,6 +1,7 @@
 var express = require('express');
 var util    = require('util');
 var https = require('https');
+var anyDB = require('any-db');
 var app = express();
 
 app.configure(function () {
@@ -58,7 +59,6 @@ app.get('/doAnUpdate', function (req, res) {
 });
 
 app.get('/sql', function (req, res) {
-	var anyDB = require('any-db');
     var dbURL = process.env.DATABASE_URL;
     console.log(dbURL);
 	var conn = anyDB.createConnection(dbURL);
