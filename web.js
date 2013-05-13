@@ -1,5 +1,5 @@
 var express = require('express');
-var Facebook = require('facebook-node-sdk');
+//var Facebook = require('facebook-node-sdk');
 var util    = require('util');
 var https = require('https');
 var app = express.createServer(express.logger());
@@ -8,7 +8,7 @@ app.configure(function () {
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
 	app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
-	app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
+	//app.use(Facebook.middleware({ appId: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_SECRET }));
 	app.set('title', 'Event Finder');
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');
@@ -51,7 +51,7 @@ function executeFbQuery(query, token, res) {
 	  res.end(e);
 	});
 }
-app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_events"}), function (req, res) {
+app.get('/doAnUpdate', function (req, res) {
 	console.log(req);
 	var token = req.query["token"];
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
@@ -59,8 +59,8 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 });
 
 app.get('/sql', function (req, res) {
-	var anyDB = require('any-db')
-    var dbURL = 'driver://user:pass@hostname/database'
+	var anyDB = require('any-db');
+    var dbURL = process.env.DATABASE_URL;
 	var conn = anyDB.createConnection(dbURL);
 
 	var sql = 'select 1 from dual';
