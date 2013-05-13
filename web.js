@@ -73,17 +73,6 @@ app.get('/sql', function (req, res) {
 	        conn.end();
 	    });
     });
-	
-	
-	var sql = 'select 1 from dual';
-	conn.query(sql, function (error, result) {
-	    if(error) {
-	        res.end(error);
-	    } else {
-	        res.end(result);
-	    }
-	}) ;
-	conn.end();
 });
 /*
 {
