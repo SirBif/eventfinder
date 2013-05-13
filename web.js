@@ -1,5 +1,4 @@
 var express = require('express');
-//var Facebook = require('facebook-node-sdk');
 var util    = require('util');
 var https = require('https');
 var app = express();
@@ -61,8 +60,9 @@ app.get('/doAnUpdate', function (req, res) {
 app.get('/sql', function (req, res) {
 	var anyDB = require('any-db');
     var dbURL = process.env.DATABASE_URL;
+    console.log(dbURL);
 	var conn = anyDB.createConnection(dbURL);
-
+	
 	var sql = 'select 1 from dual';
 	conn.query(sql, function (error, result) {
 	    if(error) {
