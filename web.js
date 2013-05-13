@@ -30,19 +30,27 @@ app.get('/', function (req, res) {
 });
 
 function executeFbQuery(query, token, res) {
-	pg.connect(process.env.DATABASE_URL, function(err, client) {
-    var query = client.query('SELECT 1+1 FROM dual');
+	var options = {
+		host: 'graph.facebook.com',
+		port: 443,
+		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
+		method: 'GET'
+	};
 
-    query.on('row', function(row) {
-        console.log(JSON.stringify(row));
-        res.end(JSON.stringify(row));
-      });
-    });
-    
-    query.on('error', function(row) {
-        res.end('Error');
-      });
-    });
+	var myReq = https.request(options, function(result) {
+		console.log("statusCode: ", myReq.statusCode);
+		console.log("headers: ", myReq.headers);
+
+		result.on('data', function(d) {
+			//res.end("token: " + token);
+			res.end(d);
+		});
+	});
+	myReq.end();
+
+	myReq.on('error', function(e) {
+	  res.end(e);
+	});
 }
 
 app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_events"}), function (req, res) {
@@ -53,26 +61,33 @@ app.get('/doAnUpdate', Facebook.loginRequired({scope : "user_events, friends_eve
 });
 
 app.get('/sql', function (req, res) {
-	pool.getConnection(function(err, connection) {
-		connection.on('error', function(err) {
-			console.log("ERROR: " + err.code);
-		});
-		if (err) { 
-			res.end(err);
-			throw err;
-		} else {
-		    connection.query( 'SELECT 1 + 1 AS solution from dual', function(err, rows) {
-			    connection.end();
-			    if (err) {
-					res.end(err);
-					throw err;
-				} else {
-					res.end('The solution is: ', rows[0].solution);	
-				}
-		    });
-			
-			
-		}
+	var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
+	var conString = process.env.DATABASE_URL;
+
+	var client = new pg.Client(conString);
+	client.connect();
+
+	//queries are queued and executed one after another once the connection becomes available
+	client.query("CREATE TEMP TABLE beatles(name varchar(10), height integer, birthday timestamptz)");
+	client.query("INSERT INTO beatles(name, height, birthday) values($1, $2, $3)", ['John', 68, new Date(1944, 10, 13)]);
+	var query = client.query("SELECT * FROM beatles WHERE name = $1", ['John']);
+
+	//can stream row results back 1 at a time
+	query.on('row', function(row) {
+	  console.log(row);
+	  console.log("Beatle name: %s", row.name); //Beatle name: John
+	  console.log("Beatle birth year: %d", row.birthday.getYear()); //dates are returned as javascript dates
+	  console.log("Beatle height: %d' %d\"", Math.floor(row.height/12), row.height%12); //integers are returned as javascript ints
+	  res.end(row.name);
+	});
+
+	//fired after last row is emitted
+	query.on('end', function() { 
+	  client.end();
+	});
+	
+	query.on('error', function(err) { 
+	  res.end(err);
 	});
 });
 /*
