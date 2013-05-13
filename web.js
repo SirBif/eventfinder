@@ -43,8 +43,12 @@ function executeFbQuery(query, token, res) {
 		console.log("headers: ", myReq.headers);
 
 		result.on('data', function(d) {
-			res.end(d.length);
-			saveEventsOnDb(d);
+		    try{
+			    res.end(d.length);
+			    saveEventsOnDb(d);
+			} catch(err) {
+			   res.end(e); 
+			}
 		});
 	});
 	myReq.end();
