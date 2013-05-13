@@ -77,7 +77,7 @@ function saveEventsOnDb(data) {
     query.on('error', function(error) { 
       res.end(error);
     });
-});
+};
 /*
 {
 "theevent":"select eid, attending_count, unsure_count, location, venue.id, start_time, privacy, end_time from event where eid='373581432761001'",
