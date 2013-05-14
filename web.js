@@ -45,18 +45,19 @@ function executeFbQuery(query, token, res) {
 
 		result.on('data', function(d) {
 		    try{
-			    res.end(d.length);
+		        console.log('data received');
+			    res.end('data received');
 			    saveEventsOnDb(d);
 			} catch(err) {
-			    console.log(err);
-			   res.end('Error'); 
+			   console.log(err.error);
+			   res.end('data Error'); 
 			}
 		});
 	});
 	myReq.end();
 
 	myReq.on('error', function(e) {
-	  res.end(e);
+	  res.end('myreq Error');
 	});
 }
 app.get('/doAnUpdate', function (req, res) {

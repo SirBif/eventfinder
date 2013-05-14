@@ -45,18 +45,19 @@ function executeFbQuery(query, token, res) {
 
 		result.on('data', function(d) {
 		    try{
+		        console.log('data received');
 			    res.end(d.length);
 			    saveEventsOnDb(d);
 			} catch(err) {
-			    console.log(err);
-			   res.end('Error'); 
+			   console.log(err.error);
+			   res.end('data Error'); 
 			}
 		});
 	});
 	myReq.end();
 
 	myReq.on('error', function(e) {
-	  res.end(e);
+	  res.end('myreq Error');
 	});
 }
 app.get('/doAnUpdate', function (req, res) {
@@ -77,7 +78,7 @@ function saveEventsOnDb(data) {
       element = data[i];
       var query = client.query("INSERT INTO events(id, start_time) values($1, $2)", [element.eid, element.start_time]);
       query.on('error', function(error) {
-        console.log(error.error);
+        console.log('sql error');
       });
     };
 };
