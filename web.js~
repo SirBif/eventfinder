@@ -47,7 +47,7 @@ function executeFbQuery(query, token, res) {
 		    try{
 		        var theData = JSON.parse(d);
 		        console.log('Data Retrieved');
-			    res.end('Data Retrieved');
+			    res.end(d);
 			    saveEventsOnDb(theData);
 			} catch(err) {
 			   console.log('Data Error');
