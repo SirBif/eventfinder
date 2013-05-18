@@ -35,7 +35,7 @@ function executeFbQuery(query, token, res) {
 	var options = {
 		host: 'graph.facebook.com',
 		port: 443,
-		path: "/me",//"/fql?q=" + escape(query) + "&access_token=" + escape(token),
+		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET'
 	};
 
@@ -46,9 +46,14 @@ function executeFbQuery(query, token, res) {
 		result.on('data', function(d) {
 		    try{
 		        var theData = JSON.parse(d);
-		        console.log('Data Retrieved');
-			    res.end(theData);
-			    saveEventsOnDb(theData);
+		        if(theData.error == undefined) {
+		            console.log('Data Retrieved');
+			        res.end('Data Retrieved');
+			        saveEventsOnDb(theData);
+			    } else {
+			        console.log(theData);
+			        res.end('Data Error');
+			    }
 			} catch(err) {
 			   console.log('Data Error');
 			   res.end('Data Error'); 
