@@ -74,16 +74,19 @@ app.get('/doAnUpdate', function (req, res) {
 	executeFbQuery(query, token, res);
 });
 
-function saveEventsOnDb(data) {
+function saveEventsOnDb(input) {
     client.connect();
 
     //queries are queued and executed one after another once the connection becomes available
     //client.query("CREATE TABLE events(id integer, start_time timestamptz, stuff varchar(10))");
+    var data = input.data;
     var length = data.length;
+    console.log(length);
     element = null;
     for (var i = 0; i < length; i++) {
       element = data[i];
-      var query = client.query("INSERT INTO events(id, start_time) values($1, $2)", [element.eid, element.start_time]);
+      console.log(element);
+      var query = client.query("INSERT INTO events(id, start_time) values($1, $2, $3)", [element.eid, element.start_time, null]);
       query.on('error', function(error) {
         console.log('sql error');
       });
