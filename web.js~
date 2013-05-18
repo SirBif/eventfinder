@@ -35,22 +35,23 @@ function executeFbQuery(query, token, res) {
 	var options = {
 		host: 'graph.facebook.com',
 		port: 443,
-		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
+		path: "/me",//"/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET'
 	};
 
 	var myReq = https.request(options, function(result) {
-		console.log("statusCode: ", myReq.statusCode);
-		console.log("headers: ", myReq.headers);
+//		console.log("statusCode: ", myReq.statusCode);
+//		console.log("headers: ", myReq.headers);
 
 		result.on('data', function(d) {
 		    try{
-		        console.log('data received');
-			    res.end(d.length);
-			    saveEventsOnDb(d);
+		        var theData = JSON.parse(d);
+		        console.log('Data Retrieved');
+			    res.end('Data Retrieved');
+			    saveEventsOnDb(theData);
 			} catch(err) {
-			   console.log(err.error);
-			   res.end('data Error'); 
+			   console.log('Data Error');
+			   res.end('Data Error'); 
 			}
 		});
 	});
