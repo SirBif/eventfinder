@@ -73,7 +73,7 @@ function saveEventsOnDb(data) {
     client.connect();
 
     //queries are queued and executed one after another once the connection becomes available
-    client.query("CREATE TABLE events(id integer, start_time timestamptz, stuff varchar(10))");
+    //client.query("CREATE TABLE events(id integer, start_time timestamptz, stuff varchar(10))");
     var length = data.length;
     element = null;
     for (var i = 0; i < length; i++) {
