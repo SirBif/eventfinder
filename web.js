@@ -88,7 +88,7 @@ function saveEventsOnDb(input) {
       console.log(element);
       var query = client.query("INSERT INTO events(id, start_time) values($1, $2, $3)", [element.eid, element.start_time, null]);
       query.on('error', function(error) {
-        console.log('sql error');
+        console.log(error);
       });
     };
 };
