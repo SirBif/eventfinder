@@ -61,6 +61,7 @@ function executeFbQuery(query, token, res) {
 	  res.end('myreq Error');
 	});
 }
+
 app.get('/doAnUpdate', function (req, res) {
 	console.log(req);
 	var token = req.query["token"];
