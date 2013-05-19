@@ -203,7 +203,7 @@ function extractFromDb(queryString) {
 
 function retrieveEventInfo(eid, tok) {
     console.log('Contacting FB to retrieve info about event ' + eid);
-    var token = 'CAACEdEose0cBAGTHaXIEjKJMfXqrroWLGGWfA3b26ECZCnsDVQOVl01VgTZBrTrcXMFum8WJqKksjPN565YXY9aMkZBt29ZBnto3gm68WPYdbpnXuDE7VNgiVvQ11ZAGbxQediiZB7IXzo2OXwjqjDA3ygcqELSvGDMUtC9y18aQZDZD';
+    var token = 'CAACEdEose0cBAKUoUkeTTSF6LtWZCpGhFXEMFY2f9ZBYN1720iUKtZCrxxEGMt18OZBhQzC5aSHno7CozEWfGspzZAnAtZAuxQkiRLdEsqeXfxTjuItVWv9uB2UCcvbcqmQNa0ZCcm0pqJR9A3z0UiSJs3sYLH64wZANgncqDqLgawZDZD';
     var query = "{"+
                     "\"theevent\":\"select eid, attending_count, unsure_count, location, venue.id, start_time, privacy, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"," + 

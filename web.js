@@ -55,7 +55,7 @@ function executeFbQuery(query, token) {
                 console.log('Data Retrieved');
                 deferred.resolve(theData);
 	        } else {
-	            console.log(theData);   
+	            console.log('FB query ended with error: '+theData);   
 	            deferred.reject(theData);     
 	        }
         });
