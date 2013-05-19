@@ -1,8 +1,11 @@
 var express = require('express');
 var util    = require('util');
 var https = require('https');
+var Parse = require('parse').Parse;
+var moment = require('moment');
 var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
 var app = express.createServer();
+Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 app.configure(function () {
 	app.use(express.bodyParser());
@@ -60,14 +63,46 @@ function executeFbQuery(query, token, res) {
 	});
 }
 
-app.get('/doAnUpdate', function (req, res) {
-	var token = req.query["token"];
-	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
-	executeFbQuery(query, token, res);
+app.get('/login', function (req, res) {
+    var uid = req.query["uid"];
+    var accessToken = req.query["token"];
+    console.log('Login from uid ' + uid);
+    fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken, res);});
 });
 
+function fetchUserInfo(uid) {
+    var FacebookUser = Parse.Object.extend("FacebookUser");
+	var query = new Parse.Query(FacebookUser);
+	query.equalTo("uid", uid);
+	return query.first();
+}
+
+function updateIfNeeded(user, uid, accessToken, res) {
+	var beforeThisItsTooOld = moment().add('days', -1);
+	var userInfo = user;
+	if(userInfo == undefined) {
+		var FacebookUser = Parse.Object.extend("FacebookUser");
+		userInfo = new FacebookUser();
+		userInfo.set("uid", uid);
+	}
+	var last_update = userInfo.get("last_update");
+	if((last_update == undefined) || (last_update < beforeThisItsTooOld)) {
+		console.log('Updating user ' + uid);
+		doAnUpdate(accessToken, res);
+		userInfo.set("last_update", new Date());
+		userInfo.set("token", accessToken);
+		userInfo.save();
+	} else {
+	    console.log('No need to update events from uid ' + uid);
+	}
+}
+
+function doAnUpdate(token, res) {
+	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
+	executeFbQuery(query, token, res);
+}
+
 function saveEventsOnDb(input) {
-    console.log(process.env.DATABASE_URL);
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             console.log(error);
@@ -75,11 +110,9 @@ function saveEventsOnDb(input) {
         }
         data = input.data;
         var length = data.length;
-        console.log(length);
         element = null;
         for (var i = 0; i < length; i++) {
           element = data[i];
-          console.log(element);
           var query = client.query("INSERT INTO events(eid, start_date) values($1, $2)", [element.eid, element.start_time]);
           query.on('error', function(error) {
             if(error.code == 23505) {
