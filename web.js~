@@ -154,7 +154,7 @@ function updateIntoDb(querySql, data) {
         element = null;
         for (var i = 0; i < length; i++) {
           element = data[i];
-          console.log(element);
+          //console.log(element);
           var query = client.query(querySql, element);
           query.on('error', function(error) {      
             console.log(error);
