@@ -39,7 +39,7 @@ function executeFbQuery(query, token) {
 		method: 'GET'
 	};
 
-    httsPromise(options).then(function(result) {
+    return Q.fcall(httsPromise(options).then(function(result) {
         result.on('data', function (d) {
             var theData = JSON.parse(d);
             if(theData.error == undefined) {
@@ -49,7 +49,7 @@ function executeFbQuery(query, token) {
 	            console.log(theData);
 	        }
         });
-    });
+    }));
 }
 
 function httsPromise(options) {
@@ -90,10 +90,11 @@ function updateIfNeeded(user, uid, accessToken) {
 	var last_update = userInfo.get("last_update");
 	if(true||(last_update == undefined) || (last_update < beforeThisItsTooOld)) {
 		console.log('Updating user ' + uid);
-		doAnUpdate(accessToken);
-		userInfo.set("last_update", new Date());
-		userInfo.set("token", accessToken);
-		userInfo.save();
+		doAnUpdate(accessToken).then(function() {
+		    userInfo.set("last_update", new Date());
+		    userInfo.set("token", accessToken);
+		    userInfo.save();
+		});
 	} else {
 	    console.log('No need to update events from uid ' + uid);
 	}
@@ -101,7 +102,7 @@ function updateIfNeeded(user, uid, accessToken) {
 
 function doAnUpdate(token) {
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
-	executeFbQuery(query, token);
+	return executeFbQuery(query, token);
 }
 
 function saveEventsOnDb(input) {
