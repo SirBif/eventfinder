@@ -30,7 +30,7 @@ app.get('/', function (req, res) {
 	});
 });
 
-function executeFbQuery(query, token, res) {
+function executeFbQuery(query, token) {
 	var options = {
 		host: 'graph.facebook.com',
 		port: 443,
@@ -44,30 +44,28 @@ function executeFbQuery(query, token, res) {
 		        var theData = JSON.parse(d);
 		        if(theData.error == undefined) {
 		            console.log('Data Retrieved');
-			        res.end('Data Retrieved');
 			        saveEventsOnDb(theData);
 			    } else {
 			        console.log(theData);
-			        res.end('Data Error');
 			    }
 			} catch(err) {
 			   console.log('Data Error');
-			   res.end('Data Error'); 
 			}
 		});
 	});
 	myReq.end();
 
 	myReq.on('error', function(e) {
-	  res.end('myreq Error');
+	  console.log('Https Request Error');
 	});
 }
 
 app.get('/login', function (req, res) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
+    res.end('Token received');
     console.log('Login from uid ' + uid);
-    fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken, res);});
+    fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
 });
 
 function fetchUserInfo(uid) {
@@ -77,7 +75,7 @@ function fetchUserInfo(uid) {
 	return query.first();
 }
 
-function updateIfNeeded(user, uid, accessToken, res) {
+function updateIfNeeded(user, uid, accessToken) {
 	var beforeThisItsTooOld = moment().add('days', -1);
 	var userInfo = user;
 	if(userInfo == undefined) {
@@ -88,7 +86,7 @@ function updateIfNeeded(user, uid, accessToken, res) {
 	var last_update = userInfo.get("last_update");
 	if((last_update == undefined) || (last_update < beforeThisItsTooOld)) {
 		console.log('Updating user ' + uid);
-		doAnUpdate(accessToken, res);
+		doAnUpdate(accessToken);
 		userInfo.set("last_update", new Date());
 		userInfo.set("token", accessToken);
 		userInfo.save();
@@ -97,9 +95,9 @@ function updateIfNeeded(user, uid, accessToken, res) {
 	}
 }
 
-function doAnUpdate(token, res) {
+function doAnUpdate(token) {
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
-	executeFbQuery(query, token, res);
+	executeFbQuery(query, token);
 }
 
 function saveEventsOnDb(input) {
