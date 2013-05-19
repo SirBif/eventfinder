@@ -39,26 +39,28 @@ function executeFbQuery(query, token) {
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET'
 	};
-
-    return Q.fcall(httsPromise(options).then(function(result) {
+    var deferred = Q.defer();
+    httsPromise(options).then(function(result) {
         var data = [];
         result.on('data', function (d) {
 	        data.push(d)
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
-	        return err;
+	        deferred.reject(err);
         });
         result.on('end', function() {
             var theData = JSON.parse(data.join(''));
             if(theData.error == undefined) {
                 console.log('Data Retrieved');
+                deferred.resolve(theData);
 	        } else {
-	            console.log(theData);        
+	            console.log(theData);   
+	            deferred.reject(theData);     
 	        }
-	        return theData;
         });
-    }));
+    });
+    return deferred.promise;
 }
 
 function httsPromise(options) {
@@ -115,7 +117,7 @@ function doAnUpdate(token) {
 }
 
 function insertEvents(input) {
-    insertIntoDb("INSERT INTO events(eid, start_date) values($1, $2)", input);
+    insertIntoDb("INSERT INTO events(eid, start_date) values($1, $2);", input);
 }
 
 function insertIntoDb(query, input) {
@@ -142,26 +144,23 @@ function insertIntoDb(query, input) {
     });
 };
 
-function updateIntoDb(query, input) {
+function updateIntoDb(querySql, data) {
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             console.log(error);
             return;
         }
-        data = input.data;
         var length = data.length;
         element = null;
         for (var i = 0; i < length; i++) {
           element = data[i];
-          var query = client.query(query, input);
-          query.on('error', function(error) {
-            if(error.code == 23505) { //if it's already present
-               console.log('Already present'); 
-            } else {            
-                console.log(error);
-            }
+          //console.log(element);
+          var query = client.query(querySql, element);
+          query.on('error', function(error) {      
+            console.log(error);
           });
-        }; 
+        };
+        client.query('commit');
         done();   
     });
 };
@@ -219,38 +218,52 @@ app.get('/update', function (req, res) {
 });
 
 function updateEventInfo(eventData) {
-    var query = "UPDATE events SET end_date=$1, attending_total=$2, attending_f=$3, maybe_total=$4, latitude=$5, longitude=$6, location=$7 WHERE eid = $";
+    console.log('Saving event data');
+    var query = "UPDATE events SET end_date=$1, attending_total=$2, attending_f=$3, maybe_total=$4, latitude=$5, longitude=$6, location=$7 WHERE eid = $8;";
     updateIntoDb(query, eventData);
 }
 
-function doTheBigUpdate() {
-    retrieveEventsToUpdate().then(function(eventRows) {
-        console.log('Number of events to update: ' + eventRows.length);
-        var rowsForTheDb = [];
-        async.eachLimit(eventRows, 5, function(eventRow, cb) {
-            retrieveEventInfo(eventRow.eid, null).then(function(fbData) {
-                console.log('Retrieved fields for event ' + eventRow.eid);
-                var data=fbData;
+function asyncRetrieve(eventRows) {
+    var deferred = Q.defer();
+    var rowsForTheDb = [];
+    async.eachLimit(eventRows, 5, function(eventRow, cb) {
+        retrieveEventInfo(eventRow.eid, null).then(function(fbData) {
+            console.log('Retrieved fields for event ' + eventRow.eid);
+            try{
+                var data = fbData.data;
                 var eventData = [
                     data[0].fql_result_set[0].end_time,
                     data[0].fql_result_set[0].attending_count,
                     data[1].fql_result_set.length,
                     data[0].fql_result_set[0].unsure_count,                    
-                    data[2].fql_result_set[0].location.latitude,
-                    data[2].fql_result_set[0].location.longitude,
+                    (data[2].fql_result_set[0]) ? data[2].fql_result_set[0].location.latitude : null,
+                    (data[2].fql_result_set[0]) ? data[2].fql_result_set[0].location.longitude : null,
                     data[0].fql_result_set[0].location,
                     data[0].fql_result_set[0].eid                    
                  ];
                  rowsForTheDb.push(eventData);
-            });
-            cb(null);
-        }, function(err) {
-            if (err) {
-                console.log(err);
-                return next(err);
-            }
-            updateEventInfo(rowsForTheDb);
+                 cb();
+             } catch(err) {
+                cb(err);
+             }
         });
+    }, function(err) {
+        if (err) {
+            console.log('Retrieve problem:' +err);
+            deferred.reject(err);
+        }
+        console.log('Processed '+rowsForTheDb.length+ ' events');
+        updateEventInfo(rowsForTheDb);//shouldn't be here, but with then the other function never gets called
+        deferred.resolve(rowsForTheDb);
+    });
+    
+    return deferred.promise();
+}
+
+function doTheBigUpdate() {
+    retrieveEventsToUpdate().then(function(eventRows) {
+        console.log('Number of events to update: ' + eventRows.length);
+        asyncRetrieve(eventRows);
     });
 }
 
