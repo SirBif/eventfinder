@@ -26,7 +26,6 @@
 			// Here we specify what we do with the response anytime this event occurs. 
 			if (response.status === 'connected') {
 				handleLogin();
-				retrieveEvents();
 			} else if (response.status === 'not_authorized') {
 				login();
 			} else {
@@ -49,7 +48,8 @@
 			if (response.status === 'connected') {
 				var uid = response.authResponse.userID;
 				var accessToken = response.authResponse.accessToken;
-				$.get("/login", {uid: uid, token : accessToken})
+				$.get("/login", {uid: uid, token : accessToken});
+				$.get("/retrieve", {}).then(function(resultsJson) {printResults(resultsJson);});
 			}
 		});
 	}
@@ -68,11 +68,11 @@
 				 tabBody=document.getElementById("data-div").getElementsByTagName("TBODY").item(0);
 				 row=document.createElement("TR");
 				 
-				 addToRow(row, entry.get("name"));
-				 var attending = entry.get("attending_count") + "+" + (entry.get("unsure_count") !== undefined ? entry.get("unsure_count") : 0);
+				 addToRow(row, entry.eid);
+				 var attending = 0 + "+" + (entry.unsure_count !== undefined ? 0 : 0);
 				 addToRow(row, attending);
-				 addToRow(row, parseDate(entry.get("start_time")));
-				 addToRow(row, entry.get("location_description"));
+				 addToRow(row, entry.start_time);
+				 addToRow(row, entry.location);
 				 
 				 tabBody.appendChild(row);
 			});

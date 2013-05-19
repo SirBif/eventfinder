@@ -88,7 +88,7 @@ function updateIfNeeded(user, uid, accessToken) {
 		userInfo.set("uid", uid);
 	}
 	var last_update = userInfo.get("last_update");
-	if(true||(last_update == undefined) || (last_update < beforeThisItsTooOld)) {
+	if((last_update == undefined) || (last_update < beforeThisItsTooOld)) {
 		console.log('Updating user ' + uid);
 		doAnUpdate(accessToken).then(function() {
 		    userInfo.set("last_update", new Date());
@@ -130,28 +130,34 @@ function saveEventsOnDb(input) {
 };
 
 app.get('/retrieve', function (req, res) {
-    retrieveEventsFromDb(null).then(function(rows) {res.end("Results: " + rows.length);});
+    retrieveEventsFromDb(null).then(function(rows) {
+        res.setHeader('Content-type', 'text/json');
+        res.end(JSON.stringify(rows));
+    });
 });
 
 function retrieveEventsFromDb(input, cb) {
     var results = [];
+    var deferred = Q.defer();
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             console.log(error);
             return;
         }
-        var query = client.query("SELECT eid FROM events LIMIT 5");
+        var query = client.query("SELECT eid, start_date AS start_time FROM events LIMIT 6");
         query.on('error', function(error) {
             console.log(error);
+            deferred.reject(error);
         });
         query.on('row', function(row) {
             results.push(row);
         });
         query.on('end', function(result) {
             done();
-            return results; 
+            deferred.resolve(results); 
         });
     });
+    return deferred.promise;
 };
 /*
 {
