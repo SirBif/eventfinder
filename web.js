@@ -82,7 +82,11 @@ function saveEventsOnDb(input) {
           console.log(element);
           var query = client.query("INSERT INTO events(eid, start_date) values($1, $2)", [element.eid, element.start_time]);
           query.on('error', function(error) {
-            console.log(error);
+            if(error.code == 23505) {
+               console.log('Event already present'); 
+            } else {            
+                console.log(error);
+            }
           });
         }; 
         done();   

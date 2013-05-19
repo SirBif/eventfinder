@@ -68,7 +68,7 @@ app.get('/doAnUpdate', function (req, res) {
 
 function saveEventsOnDb(input) {
     console.log(process.env.DATABASE_URL);
-    pg.connect(config, function(error, client, done) {
+    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             console.log(error);
             return;
