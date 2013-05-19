@@ -3,6 +3,7 @@ var util    = require('util');
 var https = require('https');
 var Parse = require('parse').Parse;
 var moment = require('moment');
+var Q = require('q');
 var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
@@ -38,26 +39,29 @@ function executeFbQuery(query, token) {
 		method: 'GET'
 	};
 
-	var myReq = https.request(options, function(result) {
-		result.on('data', function(d) {
-		    try{
-		        var theData = JSON.parse(d);
-		        if(theData.error == undefined) {
-		            console.log('Data Retrieved');
-			        saveEventsOnDb(theData);
-			    } else {
-			        console.log(theData);
-			    }
-			} catch(err) {
-			   console.log('Data Error');
-			}
-		});
+    httsPromise(options).then(function(result) {
+        result.on('data', function (d) {
+            var theData = JSON.parse(d);
+            if(theData.error == undefined) {
+                console.log('Data Retrieved');
+	            saveEventsOnDb(theData);
+	        } else {
+	            console.log(theData);
+	        }
+        });
+    });
+}
+
+function httsPromise(options) {
+    var deferred = Q.defer();
+    var myReq = https.request(options, function (result) {
+        deferred.resolve(result);
+    });
+	myReq.on('error', function(e) {
+	  deferred.reject(e);
 	});
 	myReq.end();
-
-	myReq.on('error', function(e) {
-	  console.log('Https Request Error');
-	});
+    return deferred.promise;
 }
 
 app.get('/login', function (req, res) {
@@ -84,7 +88,7 @@ function updateIfNeeded(user, uid, accessToken) {
 		userInfo.set("uid", uid);
 	}
 	var last_update = userInfo.get("last_update");
-	if((last_update == undefined) || (last_update < beforeThisItsTooOld)) {
+	if(true||(last_update == undefined) || (last_update < beforeThisItsTooOld)) {
 		console.log('Updating user ' + uid);
 		doAnUpdate(accessToken);
 		userInfo.set("last_update", new Date());
@@ -113,7 +117,7 @@ function saveEventsOnDb(input) {
           element = data[i];
           var query = client.query("INSERT INTO events(eid, start_date) values($1, $2)", [element.eid, element.start_time]);
           query.on('error', function(error) {
-            if(error.code == 23505) {
+            if(error.code == 23505) { //if it's already present
                console.log('Event already present'); 
             } else {            
                 console.log(error);
@@ -121,6 +125,31 @@ function saveEventsOnDb(input) {
           });
         }; 
         done();   
+    });
+};
+
+app.get('/retrieve', function (req, res) {
+    retrieveEventsFromDb(null).then(function(rows) {res.end("Results: " + rows.length);});
+});
+
+function retrieveEventsFromDb(input, cb) {
+    var results = [];
+    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
+        if(error) {
+            console.log(error);
+            return;
+        }
+        var query = client.query("SELECT eid FROM events LIMIT 5");
+        query.on('error', function(error) {
+            console.log(error);
+        });
+        query.on('row', function(row) {
+            results.push(row);
+        });
+        query.on('end', function(result) {
+            done();
+            return results; 
+        });
     });
 };
 /*
