@@ -64,10 +64,35 @@ function executeFbQuery(query, token) {
     return deferred.promise;
 }
 
+function getNumberOfElements(size) {
+   return (size - 10) / 12;
+}
+
+function executeFbQuery_HeadOnly(query, token) {
+	var options = {
+		host: 'graph.facebook.com',
+		port: 443,
+		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
+		method: 'GET',
+		headers: {
+		    'Accept-Encoding': 'identity'
+		}
+	};
+    var deferred = Q.defer();
+    httsPromise(options).then(function(header) {
+        var elements = getNumberOfElements(header['content-length']);
+        console.log(elements);
+        deferred.resolve(elements);
+    });
+    return deferred.promise;
+}
+
 function httsPromise(options) {
     var deferred = Q.defer();
-    var myReq = https.request(options, function (result) {
-        deferred.resolve(result);
+    var myReq = https.request(options, function (response) {
+        var header = response.headers;
+        response.destroy();
+        deferred.resolve(header);
     });
 	myReq.on('error', function(e) {
 	  deferred.reject(e);
@@ -201,16 +226,21 @@ function extractFromDb(queryString) {
     return deferred.promise;
 };
 
-
 function retrieveEventInfo(eid, tok) {
     console.log('Contacting FB to retrieve info about event ' + eid);
-    var token = 'CAACEdEose0cBALI2PcchcRtHUnnaAjw37yDdn0ZCVuGVZBjUc9VZC0ZAxeSYnI1WZBpIvCnepcNYqYTKxiCKrb2apevYxIZCLJWv5t1iop3EJivfJbKc2JGRZCcNsvfCq5sHAyvrJqulsPNiUcbA8ZCWl2NFKskVz3ZBggB0RzrevMAZDZD';
+    var token = 'CAACEdEose0cBAMw48CZBPQHWovoAxMV8Vw4VQ2FMn0JmAJCHwFke1lATKdWzktE0IdjP6L29jLm989FWr7x77J70NP0Ufc3ndtXu7P5CZCvAkXLZCeMgrFC1BK1j842uGYxQIQ9blY1c2Ryu4CziQyNlh9YWujZCdEl6FRWALAZDZD';
     var query = "{"+
                     "\"theevent\":\"select eid, attending_count, unsure_count, location, venue.id, start_time, privacy, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"," + 
-                    "\"attendinggirls\":\"select uid, sex from user where sex = 'female' and uid in (select uid from event_member where eid in (select eid from #theevent) and rsvp_status = 'attending')\"" +
-                "}";
+                "}";    
 	return executeFbQuery(query, token);
+}
+
+function retrieveEventGirls(eid, tok) {
+    console.log('Contacting FB to retrieve info about event ' + eid);
+    var token = 'CAACEdEose0cBAMw48CZBPQHWovoAxMV8Vw4VQ2FMn0JmAJCHwFke1lATKdWzktE0IdjP6L29jLm989FWr7x77J70NP0Ufc3ndtXu7P5CZCvAkXLZCeMgrFC1BK1j842uGYxQIQ9blY1c2Ryu4CziQyNlh9YWujZCdEl6FRWALAZDZD';
+    query = "select '' from user where sex = 'female' and uid in (select uid from event_member where eid ='"+eid+"' and rsvp_status = 'attending')";
+	return executeFbQuery_HeadOnly(query, token);
 }
 
 app.get('/update', function (req, res) {
@@ -234,8 +264,7 @@ function asyncRetrieve(eventRows) {
                 var data = fbData.data;
                 var eventData = [
                     data[0].fql_result_set[0].end_time,
-                    data[0].fql_result_set[0].attending_count,
-                    data[1].fql_result_set.length,
+                    data[0].fql_result_set[0].attending_count
                     data[0].fql_result_set[0].unsure_count,                    
                     (data[2].fql_result_set[0]) ? data[2].fql_result_set[0].location.latitude : null,
                     (data[2].fql_result_set[0]) ? data[2].fql_result_set[0].location.longitude : null,
