@@ -190,7 +190,6 @@ function updateIntoDb(querySql, data) {
             console.log(error);
             return;
         }
-        console.log(data);
         var query = client.query(querySql, data);
         query.on('error', function(error) {  
             done();    
@@ -215,7 +214,7 @@ app.get('/retrieve', function (req, res) {
 
 function retrieveEventsToDisplay(){
     var limit = 10;
-    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events ORDER BY start_date ASC LIMIT " + limit);
+    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events WHERE start_date > 'yesterday' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit);
 }
 
 function extractFromDb(queryString) {
