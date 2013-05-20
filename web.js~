@@ -187,7 +187,6 @@ function updateIntoDb(querySql, data) {
             console.log(error);
             return;
         }
-        console.log('Saving event');
         var query = client.query(querySql, data);
         query.on('error', function(error) {      
             console.log(error);
