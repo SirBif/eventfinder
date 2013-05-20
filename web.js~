@@ -118,6 +118,7 @@ app.get('/login', function (req, res) {
     res.end('Token received');
     console.log('Login from uid ' + uid);
     fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
+    dotheBigUpdate();
 });
 
 function fetchUserInfo(uid) {
@@ -258,8 +259,6 @@ function retrieveEventGirls(eid, tok) {
 
 app.get('/update', function (req, res) {
     res.end('mah');
-    extractFromDb("delete from events where start_date < now() - interval '12 hours'");
-    //extractFromDb('alter table events add column last_update timestamptz');
     doTheBigUpdate();
 });
 
@@ -309,6 +308,7 @@ function getAToken() {
 }
 
 function doTheBigUpdate() {
+    extractFromDb("delete from events where start_date < now() - interval '24 hours'");
     retrieveEventsToUpdate().then(function(eventRows) {
         console.log('Number of events to update: ' + eventRows.length);
         getAToken().then(function(user) {asyncRetrieve(eventRows, user.get("token"));});

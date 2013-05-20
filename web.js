@@ -258,8 +258,6 @@ function retrieveEventGirls(eid, tok) {
 
 app.get('/update', function (req, res) {
     res.end('mah');
-    extractFromDb("delete from events where start_date < now() - interval '24 hours'");
-    //extractFromDb('alter table events add column last_update timestamptz');
     doTheBigUpdate();
 });
 
@@ -309,6 +307,7 @@ function getAToken() {
 }
 
 function doTheBigUpdate() {
+    extractFromDb("delete from events where start_date < now() - interval '24 hours'");
     retrieveEventsToUpdate().then(function(eventRows) {
         console.log('Number of events to update: ' + eventRows.length);
         getAToken().then(function(user) {asyncRetrieve(eventRows, user.get("token"));});
