@@ -41,16 +41,16 @@ function executeFbQuery(query, token) {
 	};
     var deferred = Q.defer();
     httpRequest(options).then(function(result) {
-        var data = '';
+        var data = [];
         result.on('data', function (d) {
-	        data+=d;
+	        data.push(d);
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
 	        deferred.reject(err);
         });
         result.on('end', function() {
-            var theData = JSON.parse(data);
+            var theData = JSON.parse(data.join(''));
             if(theData.error == undefined) {
                 console.log('Data Retrieved');
                 deferred.resolve(theData);
@@ -150,35 +150,37 @@ function updateIfNeeded(user, uid, accessToken) {
 
 function doAnUpdate(token) {
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
-	return executeFbQuery(query, token).then(function(results) {insertEvents(results);});
+	return executeFbQuery(query, token).then(function(results) {return insertEvents(results);});
 }
 
 function insertEvents(input) {
-    insertIntoDb("INSERT INTO events(eid, start_date) values($1, $2);", input);
+    return insertIntoDb("INSERT INTO events(eid, start_date) values($1, $2);", input.data);
 }
 
-function insertIntoDb(query, input) {
+function insertIntoDb(querySql, data) {
+    var length = data.length;
+    var deferred = Q.defer();
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
-            console.log(error);
-            return;
+            deferred.reject(error);
         }
-        data = input.data;
-        var length = data.length;
-        element = null;
         for (var i = 0; i < length; i++) {
-          element = data[i];
-          var query = client.query(query, [element.eid, element.start_time]);
-          query.on('error', function(error) {
-            if(error.code == 23505) { //if it's already present
-               console.log('Already present'); 
-            } else {            
-                console.log(error);
-            }
-          });
-        }; 
-        done();   
+            var query = client.query(querySql, [data[i].eid, data[i].start_time]);
+            query.on('error', function(error) {
+                if(error.code == 23505) { //if it's already present
+                    error = 'Already present';
+                }
+                done();
+                console.log(error);   
+                deferred.reject(error);
+            });
+            query.on('end', function(result) {
+                done();
+            });
+        }
+        deferred.resolve(); 
     });
+    return deferred.promise;
 };
 
 function updateIntoDb(querySql, data) {
@@ -187,11 +189,15 @@ function updateIntoDb(querySql, data) {
             console.log(error);
             return;
         }
-        var query = client.query(querySql, data);
-        query.on('error', function(error) {      
-            console.log(error);
-        });
-        done();
+        console.log(data);
+        for(var i=0;i<data.length;i=i+1){
+            console.log(data[i]);
+            var query = client.query(querySql, data[i]);
+            query.on('error', function(error) {      
+                console.log(error);
+            });
+            done();
+        }
         console.log('Saved');   
     });
 };
@@ -235,7 +241,7 @@ function retrieveEventInfo(eid, tok) {
     console.log('Retrieving info about event ' + eid);
     var token = 'CAACEdEose0cBAMw48CZBPQHWovoAxMV8Vw4VQ2FMn0JmAJCHwFke1lATKdWzktE0IdjP6L29jLm989FWr7x77J70NP0Ufc3ndtXu7P5CZCvAkXLZCeMgrFC1BK1j842uGYxQIQ9blY1c2Ryu4CziQyNlh9YWujZCdEl6FRWALAZDZD';
     var query = "{"+
-                    "\"theevent\":\"select eid, attending_count, unsure_count, location, venue.id, start_time, privacy, end_time from event where eid='"+eid+"'\"," +
+                    "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
 	return executeFbQuery(query, token);
@@ -255,7 +261,7 @@ app.get('/update', function (req, res) {
 
 function updateEventInfo(eventData) {
     var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6 WHERE eid = $7;";
-    updateIntoDb(query, eventData);
+    updateIntoDb(query, eventData.data);
 }
 
 function asyncRetrieve(eventRows) {
