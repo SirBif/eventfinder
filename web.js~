@@ -41,21 +41,22 @@ function executeFbQuery(query, token) {
 	};
     var deferred = Q.defer();
     httsPromise(options).then(function(result) {
-        var data = [];
+        var data = '';
         result.on('data', function (d) {
-	        data.push(d)
+	        data+=d;
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
 	        deferred.reject(err);
         });
         result.on('end', function() {
-            var theData = JSON.parse(data.join(''));
+            console.log(''+data);
+            var theData = JSON.parse(data);
             if(theData.error == undefined) {
                 console.log('Data Retrieved');
                 deferred.resolve(theData);
 	        } else {
-	            console.log(theData);   
+	            console.log('FB query ended with error: '+theData);   
 	            deferred.reject(theData);     
 	        }
         });

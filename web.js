@@ -41,16 +41,17 @@ function executeFbQuery(query, token) {
 	};
     var deferred = Q.defer();
     httsPromise(options).then(function(result) {
-        var data = [];
+        var data = '';
         result.on('data', function (d) {
-	        data.push(d)
+	        data+=d;
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
 	        deferred.reject(err);
         });
         result.on('end', function() {
-            var theData = JSON.parse(data.join(''));
+            console.log(''+data);
+            var theData = JSON.parse(data);
             if(theData.error == undefined) {
                 console.log('Data Retrieved');
                 deferred.resolve(theData);
@@ -203,7 +204,7 @@ function extractFromDb(queryString) {
 
 function retrieveEventInfo(eid, tok) {
     console.log('Contacting FB to retrieve info about event ' + eid);
-    var token = 'CAACEdEose0cBAKUoUkeTTSF6LtWZCpGhFXEMFY2f9ZBYN1720iUKtZCrxxEGMt18OZBhQzC5aSHno7CozEWfGspzZAnAtZAuxQkiRLdEsqeXfxTjuItVWv9uB2UCcvbcqmQNa0ZCcm0pqJR9A3z0UiSJs3sYLH64wZANgncqDqLgawZDZD';
+    var token = 'CAACEdEose0cBALI2PcchcRtHUnnaAjw37yDdn0ZCVuGVZBjUc9VZC0ZAxeSYnI1WZBpIvCnepcNYqYTKxiCKrb2apevYxIZCLJWv5t1iop3EJivfJbKc2JGRZCcNsvfCq5sHAyvrJqulsPNiUcbA8ZCWl2NFKskVz3ZBggB0RzrevMAZDZD';
     var query = "{"+
                     "\"theevent\":\"select eid, attending_count, unsure_count, location, venue.id, start_time, privacy, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"," + 
