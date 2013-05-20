@@ -40,7 +40,7 @@ function executeFbQuery(query, token) {
 		method: 'GET'
 	};
     var deferred = Q.defer();
-    httsPromise(options).then(function(result) {
+    httpRequest(options).then(function(result) {
         var data = '';
         result.on('data', function (d) {
 	        data+=d;
@@ -50,7 +50,6 @@ function executeFbQuery(query, token) {
 	        deferred.reject(err);
         });
         result.on('end', function() {
-            console.log(''+data);
             var theData = JSON.parse(data);
             if(theData.error == undefined) {
                 console.log('Data Retrieved');
@@ -79,7 +78,7 @@ function executeFbQuery_HeadOnly(query, token) {
 		}
 	};
     var deferred = Q.defer();
-    httsPromise(options).then(function(header) {
+    httpHead(options).then(function(header) {
         var elements = getNumberOfElements(header['content-length']);
         console.log(elements);
         deferred.resolve(elements);
@@ -87,12 +86,24 @@ function executeFbQuery_HeadOnly(query, token) {
     return deferred.promise;
 }
 
-function httsPromise(options) {
+function httpHead(options) {
     var deferred = Q.defer();
     var myReq = https.request(options, function (response) {
         var header = response.headers;
         response.destroy();
         deferred.resolve(header);
+    });
+	myReq.on('error', function(e) {
+	  deferred.reject(e);
+	});
+	myReq.end();
+    return deferred.promise;
+}
+
+function httpRequest(options) {
+    var deferred = Q.defer();
+    var myReq = https.request(options, function (response) {
+        deferred.resolve(response);
     });
 	myReq.on('error', function(e) {
 	  deferred.reject(e);
@@ -176,18 +187,12 @@ function updateIntoDb(querySql, data) {
             console.log(error);
             return;
         }
-        var length = data.length;
-        element = null;
-        for (var i = 0; i < length; i++) {
-          element = data[i];
-          //console.log(element);
-          var query = client.query(querySql, element);
-          query.on('error', function(error) {      
+        var query = client.query(querySql, data);
+        query.on('error', function(error) {      
             console.log(error);
-          });
-        };
-        client.query('commit');
-        done();   
+        });
+        done();
+        console.log('Saved');   
     });
 };
 
@@ -227,11 +232,11 @@ function extractFromDb(queryString) {
 };
 
 function retrieveEventInfo(eid, tok) {
-    console.log('Contacting FB to retrieve info about event ' + eid);
+    console.log('Retrieving info about event ' + eid);
     var token = 'CAACEdEose0cBAMw48CZBPQHWovoAxMV8Vw4VQ2FMn0JmAJCHwFke1lATKdWzktE0IdjP6L29jLm989FWr7x77J70NP0Ufc3ndtXu7P5CZCvAkXLZCeMgrFC1BK1j842uGYxQIQ9blY1c2Ryu4CziQyNlh9YWujZCdEl6FRWALAZDZD';
     var query = "{"+
                     "\"theevent\":\"select eid, attending_count, unsure_count, location, venue.id, start_time, privacy, end_time from event where eid='"+eid+"'\"," +
-                    "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"," + 
+                    "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
 	return executeFbQuery(query, token);
 }
@@ -249,14 +254,12 @@ app.get('/update', function (req, res) {
 });
 
 function updateEventInfo(eventData) {
-    console.log('Saving event data');
-    var query = "UPDATE events SET end_date=$1, attending_total=$2, attending_f=$3, maybe_total=$4, latitude=$5, longitude=$6, location=$7 WHERE eid = $8;";
+    var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6 WHERE eid = $7;";
     updateIntoDb(query, eventData);
 }
 
 function asyncRetrieve(eventRows) {
     var deferred = Q.defer();
-    var rowsForTheDb = [];
     async.eachLimit(eventRows, 5, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, null).then(function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
@@ -264,14 +267,14 @@ function asyncRetrieve(eventRows) {
                 var data = fbData.data;
                 var eventData = [
                     data[0].fql_result_set[0].end_time,
-                    data[0].fql_result_set[0].attending_count
+                    data[0].fql_result_set[0].attending_count,
                     data[0].fql_result_set[0].unsure_count,                    
-                    (data[2].fql_result_set[0]) ? data[2].fql_result_set[0].location.latitude : null,
-                    (data[2].fql_result_set[0]) ? data[2].fql_result_set[0].location.longitude : null,
+                    (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.latitude : null,
+                    (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.longitude : null,
                     data[0].fql_result_set[0].location,
                     data[0].fql_result_set[0].eid                    
                  ];
-                 rowsForTheDb.push(eventData);
+                 updateEventInfo(eventData);
                  cb();
              } catch(err) {
                 cb(err);
@@ -282,9 +285,7 @@ function asyncRetrieve(eventRows) {
             console.log('Retrieve problem:' +err);
             deferred.reject(err);
         }
-        console.log('Processed '+rowsForTheDb.length+ ' events');
-        updateEventInfo(rowsForTheDb);//shouldn't be here, but with then the other function never gets called
-        deferred.resolve(rowsForTheDb);
+        deferred.resolve();
     });
     
     return deferred.promise();
