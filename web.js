@@ -184,22 +184,26 @@ function insertIntoDb(querySql, data) {
 };
 
 function updateIntoDb(querySql, data) {
+    var deferred = Q.defer();
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             console.log(error);
             return;
         }
         console.log(data);
-        for(var i=0;i<data.length;i=i+1){
-            console.log(data[i]);
-            var query = client.query(querySql, data[i]);
-            query.on('error', function(error) {      
-                console.log(error);
-            });
+        var query = client.query(querySql, data);
+        query.on('error', function(error) {  
+            done();    
+            console.log(error);
+            deferred.reject(error);
+        });
+        query.on('end', function(result) {
             done();
+            console.log('Saved');
+            deferred.resolve(result);  
         }
-        console.log('Saved');   
     });
+    return deferred.promise;
 };
 
 app.get('/retrieve', function (req, res) {
