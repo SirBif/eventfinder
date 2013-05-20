@@ -149,7 +149,7 @@ function updateIfNeeded(user, uid, accessToken) {
 }
 
 function doAnUpdate(token) {
-	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND and venue.id <> '' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
+	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
 	return executeFbQuery(query, token).then(function(results) {insertEvents(results);});
 }
 
