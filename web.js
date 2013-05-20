@@ -201,7 +201,7 @@ function updateIntoDb(querySql, data) {
             done();
             console.log('Saved');
             deferred.resolve(result);  
-        }
+        });
     });
     return deferred.promise;
 };

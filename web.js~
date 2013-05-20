@@ -192,10 +192,10 @@ function updateIntoDb(querySql, data) {
         }
         console.log(data);
         var query = client.query(querySql, data);
-        query.on('error', function(error) {      
+        query.on('error', function(error) {  
+            done();    
             console.log(error);
             deferred.reject(error);
-            done();
         });
         query.on('end', function(result) {
             done();
