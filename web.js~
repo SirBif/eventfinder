@@ -128,7 +128,7 @@ function fetchUserInfo(uid) {
 }
 
 function updateIfNeeded(user, uid, accessToken) {
-	var beforeThisItsTooOld = moment().add('days', -1);
+	var beforeThisItsTooOld = moment().add('minutes', -30);
 	var userInfo = user;
 	if(userInfo == undefined) {
 		var FacebookUser = Parse.Object.extend("FacebookUser");
@@ -201,7 +201,7 @@ function updateIntoDb(querySql, data) {
             done();
             console.log('Saved');
             deferred.resolve(result);  
-        }
+        });
     });
     return deferred.promise;
 };
@@ -214,7 +214,7 @@ app.get('/retrieve', function (req, res) {
 });
 
 function retrieveEventsToDisplay(){
-    return extractFromDb("SELECT eid, start_date AS start_time FROM events LIMIT 5");
+    return extractFromDb("SELECT eid, start_date AS start_time, attending_total, maybe_total, location FROM events ORDER BY start_date ASC LIMIT 5");
 }
 
 function extractFromDb(queryString) {
@@ -243,19 +243,17 @@ function extractFromDb(queryString) {
 
 function retrieveEventInfo(eid, tok) {
     console.log('Retrieving info about event ' + eid);
-    var token = 'CAACEdEose0cBAMw48CZBPQHWovoAxMV8Vw4VQ2FMn0JmAJCHwFke1lATKdWzktE0IdjP6L29jLm989FWr7x77J70NP0Ufc3ndtXu7P5CZCvAkXLZCeMgrFC1BK1j842uGYxQIQ9blY1c2Ryu4CziQyNlh9YWujZCdEl6FRWALAZDZD';
     var query = "{"+
                     "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
-	return executeFbQuery(query, token);
+	return executeFbQuery(query, tok);
 }
 
 function retrieveEventGirls(eid, tok) {
     console.log('Contacting FB to retrieve info about event ' + eid);
-    var token = 'CAACEdEose0cBAMw48CZBPQHWovoAxMV8Vw4VQ2FMn0JmAJCHwFke1lATKdWzktE0IdjP6L29jLm989FWr7x77J70NP0Ufc3ndtXu7P5CZCvAkXLZCeMgrFC1BK1j842uGYxQIQ9blY1c2Ryu4CziQyNlh9YWujZCdEl6FRWALAZDZD';
     query = "select '' from user where sex = 'female' and uid in (select uid from event_member where eid ='"+eid+"' and rsvp_status = 'attending')";
-	return executeFbQuery_HeadOnly(query, token);
+	return executeFbQuery_HeadOnly(query, tok);
 }
 
 app.get('/update', function (req, res) {
@@ -264,14 +262,14 @@ app.get('/update', function (req, res) {
 });
 
 function updateEventInfo(eventData) {
-    var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6 WHERE eid = $7;";
-    updateIntoDb(query, eventData.data);
+    var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6, name=$7 WHERE eid = $8;";
+    updateIntoDb(query, eventData);
 }
 
-function asyncRetrieve(eventRows) {
+function asyncRetrieve(eventRows, token) {
     var deferred = Q.defer();
     async.eachLimit(eventRows, 5, function(eventRow, cb) {
-        retrieveEventInfo(eventRow.eid, null).then(function(fbData) {
+        retrieveEventInfo(eventRow.eid, token).then(function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
             try{
                 var data = fbData.data;
@@ -282,6 +280,7 @@ function asyncRetrieve(eventRows) {
                     (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.latitude : null,
                     (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.longitude : null,
                     data[0].fql_result_set[0].location,
+                    data[0].fql_result_set[0].name,
                     data[0].fql_result_set[0].eid                    
                  ];
                  updateEventInfo(eventData);
@@ -297,14 +296,20 @@ function asyncRetrieve(eventRows) {
         }
         deferred.resolve();
     });
-    
-    return deferred.promise();
+    return deferred.promise;
+}
+
+function getAToken() {
+    var FacebookUser = Parse.Object.extend("FacebookUser");
+	var query = new Parse.Query(FacebookUser);
+	query.descending("updatedAt")
+	return query.first();
 }
 
 function doTheBigUpdate() {
     retrieveEventsToUpdate().then(function(eventRows) {
         console.log('Number of events to update: ' + eventRows.length);
-        asyncRetrieve(eventRows);
+        getAToken().then(function(user) {asyncRetrieve(eventRows, user.get("token"));});
     });
 }
 
