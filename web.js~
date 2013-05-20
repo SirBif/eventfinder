@@ -118,7 +118,6 @@ app.get('/login', function (req, res) {
     res.end('Token received');
     console.log('Login from uid ' + uid);
     fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
-    dotheBigUpdate();
 });
 
 function fetchUserInfo(uid) {

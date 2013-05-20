@@ -268,7 +268,7 @@ function updateEventInfo(eventData) {
 
 function asyncRetrieve(eventRows, token) {
     var deferred = Q.defer();
-    async.eachLimit(eventRows, 5, function(eventRow, cb) {
+    async.eachLimit(eventRows, 1, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token).then(function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
             try{
