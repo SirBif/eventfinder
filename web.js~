@@ -214,7 +214,7 @@ app.get('/retrieve', function (req, res) {
 });
 
 function retrieveEventsToDisplay(){
-    return extractFromDb("SELECT eid, start_date AS start_time, attending_total, maybe_total, location FROM events ORDER BY start_date ASC LIMIT 5");
+    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events ORDER BY start_date ASC LIMIT 5");
 }
 
 function extractFromDb(queryString) {
@@ -258,11 +258,12 @@ function retrieveEventGirls(eid, tok) {
 
 app.get('/update', function (req, res) {
     res.end('mah');
+    //extractFromDb('alter table events add column last_update timestamptz');
     doTheBigUpdate();
 });
 
 function updateEventInfo(eventData) {
-    var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6, name=$7 WHERE eid = $8;";
+    var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6, name=left($7, 100), last_update = now() WHERE eid = $8;";
     updateIntoDb(query, eventData);
 }
 
@@ -315,6 +316,6 @@ function doTheBigUpdate() {
 
 function retrieveEventsToUpdate() {
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events ORDER BY start_date ASC LIMIT 5";
+    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '12 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT 5";
     return extractFromDb(query);
 };
