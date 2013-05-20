@@ -214,7 +214,7 @@ app.get('/retrieve', function (req, res) {
 
 function retrieveEventsToDisplay(){
     var limit = 10;
-    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events WHERE start_time > 'yesterday' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit);
+    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events WHERE start_date > 'yesterday' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit);
 }
 
 function extractFromDb(queryString) {
@@ -258,6 +258,7 @@ function retrieveEventGirls(eid, tok) {
 
 app.get('/update', function (req, res) {
     res.end('mah');
+    extractFromDb("delete from events where start_date < now() - interval '12 hours'");
     //extractFromDb('alter table events add column last_update timestamptz');
     doTheBigUpdate();
 });

@@ -258,6 +258,7 @@ function retrieveEventGirls(eid, tok) {
 
 app.get('/update', function (req, res) {
     res.end('mah');
+    extractFromDb("delete from events where start_date < now() - interval '24 hours'");
     //extractFromDb('alter table events add column last_update timestamptz');
     doTheBigUpdate();
 });
