@@ -45,6 +45,7 @@ function executeFbQuery(query, token) {
         var data = [];
         result.on('data', function (d) {
 	        data.push(d);
+	        console.log('received data');
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);

@@ -45,6 +45,7 @@ function executeFbQuery(query, token) {
         var data = [];
         result.on('data', function (d) {
 	        data.push(d);
+	        console.log('received data');
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
@@ -269,7 +270,7 @@ function updateEventInfo(eventData) {
 
 function asyncRetrieve(eventRows, token) {
     var deferred = Q.defer();
-    async.eachLimit(eventRows, 1, function(eventRow, cb) {
+    async.eachLimit(eventRows, 3, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token).then(function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
             try{
