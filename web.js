@@ -269,7 +269,7 @@ function updateEventInfo(eventData) {
 
 function asyncRetrieve(eventRows, token) {
     var deferred = Q.defer();
-    async.eachLimit(eventRows, 1, function(eventRow, cb) {
+    async.eachLimit(eventRows, 3, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token).then(function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
             try{
@@ -316,7 +316,8 @@ function doTheBigUpdate() {
 }
 
 function retrieveEventsToUpdate() {
+    var limit = 5;
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '1 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT 5";
+    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '1 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT " + limit;
     return extractFromDb(query);
 };
