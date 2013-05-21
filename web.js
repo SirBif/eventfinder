@@ -38,7 +38,10 @@ function executeFbQuery(query, token) {
 		host: 'graph.facebook.com',
 		port: 443,
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-		method: 'GET'
+		method: 'GET',
+		headers: {
+		    'connection':'keep-alive'
+		}
 	};
     var deferred = Q.defer();
     httpRequest(options).then(function(result) {
@@ -319,6 +322,6 @@ function doTheBigUpdate() {
 function retrieveEventsToUpdate() {
     var limit = 5;
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '1 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT " + limit;
+    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '0 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT " + limit;
     return extractFromDb(query);
 };

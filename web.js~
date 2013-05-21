@@ -38,7 +38,10 @@ function executeFbQuery(query, token) {
 		host: 'graph.facebook.com',
 		port: 443,
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-		method: 'GET'
+		method: 'GET',
+		headers: {
+		    'connection':'keep-alive'
+		}
 	};
     var deferred = Q.defer();
     httpRequest(options).then(function(result) {
