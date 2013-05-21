@@ -138,11 +138,10 @@ function updateIfNeeded(user, uid, accessToken) {
 	var last_update = userInfo.get("last_update");
 	if((last_update == undefined) || (last_update < beforeThisItsTooOld)) {
 		console.log('Updating user ' + uid);
-		doAnUpdate(accessToken).then(function() {
+		doAnUpdate(accessToken);
 		    userInfo.set("last_update", new Date());
 		    userInfo.set("token", accessToken);
 		    userInfo.save();
-		});
 	} else {
 	    console.log('No need to update events from uid ' + uid);
 	}
