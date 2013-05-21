@@ -1,6 +1,7 @@
 var express = require('express');
 var util    = require('util');
 var https = require('https');
+https.globalAgent.maxSockets = 20;
 var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
@@ -316,6 +317,6 @@ function doTheBigUpdate() {
 
 function retrieveEventsToUpdate() {
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '12 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT 5";
+    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '1 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT 5";
     return extractFromDb(query);
 };

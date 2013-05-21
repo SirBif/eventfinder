@@ -1,6 +1,7 @@
 var express = require('express');
 var util    = require('util');
 var https = require('https');
+https.globalAgent.maxSockets = 20;
 var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
@@ -268,7 +269,7 @@ function updateEventInfo(eventData) {
 
 function asyncRetrieve(eventRows, token) {
     var deferred = Q.defer();
-    async.eachLimit(eventRows, 5, function(eventRow, cb) {
+    async.eachLimit(eventRows, 1, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token).then(function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
             try{
