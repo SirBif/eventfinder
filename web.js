@@ -20,8 +20,8 @@ app.configure(function () {
 });
 
 var port = process.env.PORT || 5000;
-app.listen(port, function() {
-  console.log("Listening on " + port);
+    app.listen(port, function() {
+    console.log("Listening on " + port);
 });
 
 
@@ -33,39 +33,35 @@ app.get('/', function (req, res) {
 	});
 });
 
-function executeFbQuery(query, token) {
+function executeFbQuery(query, token, cb) {
 	var options = {
 		host: 'graph.facebook.com',
 		port: 443,
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET',
 		headers: {
-		    'connection':'keep-alive'
+		    'Connection': 'keep-alive'
 		}
 	};
-    var deferred = Q.defer();
+	
     httpRequest(options).then(function(result) {
         var data = [];
         result.on('data', function (d) {
 	        data.push(d);
-	        console.log('received data');
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
-	        deferred.reject(err);
         });
         result.on('end', function() {
             var theData = JSON.parse(data.join(''));
             if(theData.error == undefined) {
                 console.log('Data Retrieved');
-                deferred.resolve(theData);
+                cb(theData);
 	        } else {
 	            console.log('FB query ended with error: '+theData);   
-	            deferred.reject(theData);     
 	        }
         });
     });
-    return deferred.promise;
 }
 
 function getNumberOfElements(size) {
@@ -79,16 +75,15 @@ function executeFbQuery_HeadOnly(query, token) {
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET',
 		headers: {
-		    'Accept-Encoding': 'identity'
+		    'Accept-Encoding': 'identity',
+		    'Connection': 'keep-alive'
 		}
 	};
-    var deferred = Q.defer();
     httpHead(options).then(function(header) {
         var elements = getNumberOfElements(header['content-length']);
         console.log(elements);
-        deferred.resolve(elements);
+        return(elements);
     });
-    return deferred.promise;
 }
 
 function httpHead(options) {
@@ -155,7 +150,7 @@ function updateIfNeeded(user, uid, accessToken) {
 
 function doAnUpdate(token) {
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT 50) ORDER BY start_time ASC";
-	return executeFbQuery(query, token).then(function(results) {return insertEvents(results);});
+	return executeFbQuery(query, token, function(results) {return insertEvents(results);});
 }
 
 function insertEvents(input) {
@@ -246,13 +241,13 @@ function extractFromDb(queryString) {
     return deferred.promise;
 };
 
-function retrieveEventInfo(eid, tok) {
+function retrieveEventInfo(eid, tok, cb) {
     console.log('Retrieving info about event ' + eid);
     var query = "{"+
                     "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
-	return executeFbQuery(query, tok);
+	return executeFbQuery(query, tok, cb);
 }
 
 function retrieveEventGirls(eid, tok) {
@@ -274,7 +269,7 @@ function updateEventInfo(eventData) {
 function asyncRetrieve(eventRows, token) {
     var deferred = Q.defer();
     async.eachLimit(eventRows, 3, function(eventRow, cb) {
-        retrieveEventInfo(eventRow.eid, token).then(function(fbData) {
+        retrieveEventInfo(eventRow.eid, token, function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
             try{
                 var data = fbData.data;
