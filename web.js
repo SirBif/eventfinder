@@ -246,7 +246,7 @@ function retrieveEventInfo(eid, tok, cb) {
                     "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
-	return executeFbQuery(query, tok, cb);
+	executeFbQuery(query, tok, cb);
 }
 
 function retrieveEventGirls(eid, tok) {
@@ -266,7 +266,6 @@ function updateEventInfo(eventData) {
 }
 
 function asyncRetrieve(eventRows, token) {
-    var deferred = Q.defer();
     async.eachLimit(eventRows, 3, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token, function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
@@ -291,11 +290,8 @@ function asyncRetrieve(eventRows, token) {
     }, function(err) {
         if (err) {
             console.log('Retrieve problem:' +err);
-            deferred.reject(err);
         }
-        deferred.resolve();
     });
-    return deferred.promise;
 }
 
 function getAToken() {

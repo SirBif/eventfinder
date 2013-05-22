@@ -128,7 +128,7 @@ function fetchUserInfo(uid) {
 }
 
 function updateIfNeeded(user, uid, accessToken) {
-	var beforeThisItsTooOld = moment().add('minutes', -30);
+	var beforeThisItsTooOld = moment().add('minutes', -0);
 	var userInfo = user;
 	if(userInfo == undefined) {
 		var FacebookUser = Parse.Object.extend("FacebookUser");
@@ -266,7 +266,6 @@ function updateEventInfo(eventData) {
 }
 
 function asyncRetrieve(eventRows, token) {
-    var deferred = Q.defer();
     async.eachLimit(eventRows, 3, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token, function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
@@ -291,11 +290,8 @@ function asyncRetrieve(eventRows, token) {
     }, function(err) {
         if (err) {
             console.log('Retrieve problem:' +err);
-            deferred.reject(err);
         }
-        deferred.resolve();
     });
-    return deferred.promise;
 }
 
 function getAToken() {
