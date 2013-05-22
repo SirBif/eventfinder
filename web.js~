@@ -246,7 +246,7 @@ function retrieveEventInfo(eid, tok, cb) {
                     "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
-	return executeFbQuery(query, tok, cb);
+	executeFbQuery(query, tok, cb);
 }
 
 function retrieveEventGirls(eid, tok) {

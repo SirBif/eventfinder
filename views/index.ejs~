@@ -1,0 +1,120 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>Eventi a Ferrara</title>
+  <meta name="description" content="Event Finder">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script type="text/javascript" src="//raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
+</head>
+
+<body>
+<div id="fb-root"></div>
+<script>
+	window.fbAsyncInit = function() {
+		//retrieveEvents().then(function(results) {printResults(results)});
+		
+		FB.init({
+			appId      : <%= process.env.FACEBOOK_APP_ID %>, // Facebook App ID
+			cookie     : true, // enable cookies to allow Parse to access the session
+			xfbml      : true  // parse XFBML
+		});
+
+		FB.Event.subscribe('auth.authResponseChange', function(response) {
+			// Here we specify what we do with the response anytime this event occurs. 
+			if (response.status === 'connected') {
+				handleLogin();
+			} else if (response.status === 'not_authorized') {
+				login();
+			} else {
+				login();
+			}
+		});
+	};
+
+	// Load the SDK asynchronously
+	(function(d){
+		var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+		if (d.getElementById(id)) {return;}
+		js = d.createElement('script'); js.id = id; js.async = true;
+		js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=" + <%= process.env.FACEBOOK_APP_ID %>;
+		ref.parentNode.insertBefore(js, ref);
+	}(document));
+	
+	function handleLogin() {
+		FB.getLoginStatus(function(response) {
+			if (response.status === 'connected') {
+				var uid = response.authResponse.userID;
+				var accessToken = response.authResponse.accessToken;
+				$.get("/login", {uid: uid, token : accessToken});
+				$.get("/retrieve", {}).then(function(resultsJson) {printResults(resultsJson);});
+				//$.get("/update", {});
+			}
+		});
+	}
+	
+	function printResults(results) {
+		if (!document.getElementsByTagName) return;
+		if((results == undefined) || (results.length == 0)) {			
+			dataDiv = document.getElementById("data-div");
+			infoDiv=document.createElement("DIV");
+			textnode = document.createTextNode("Nessun evento disponibile");					 
+			infoDiv.appendChild(textnode);		
+			dataDiv.appendChild(infoDiv);
+		} else {
+			results.forEach(function(entry) {				 	
+				 $("#event-table").removeClass("notVisible");
+				 tabBody=document.getElementById("data-div").getElementsByTagName("TBODY").item(0);
+				 row=document.createElement("TR");
+				 
+				 addToRow(row, entry.name);
+				 var attending = (entry.attending_total !== undefined ? entry.attending_total : 0) + "+" + (entry.maybe_total !== undefined ? entry.maybe_total : 0);
+				 addToRow(row, attending);
+				 addToRow(row, moment(entry.start_time).fromNow());
+				 addToRow(row, entry.location);
+				 
+				 tabBody.appendChild(row);
+			});
+		}
+	}
+
+	function addToRow(row, content) {
+		cell = document.createElement("TD");					 
+		textnode = document.createTextNode(content);					 
+		cell.appendChild(textnode);					 
+		row.appendChild(cell);
+	}
+
+  function login() {
+        Parse.FacebookUtils.logIn("user_events,friends_events", {
+		  success: function(user) {
+			if (!user.existed()) {
+			  alert("User signed up and logged in through Facebook!");
+			} else {
+			  alert("User logged in through Facebook!");
+			}
+		  },
+		  error: function(user, error) {
+			alert("User cancelled the Facebook login or did not fully authorize.");
+		  }
+		});
+	}
+</script>
+<!--Below we include the Login Button social plugin. This button uses the JavaScript SDK to-->
+<fb:login-button show-faces="true" scope="user_events, friends_events" width="200" max-rows="1"></fb:login-button>
+<!--present a graphical Login button that triggers the FB.login() function when clicked.-->
+<div id="data-div">
+	<table id="event-table" class="notVisible">
+		<thead>
+			<tr>
+				<th>Evento</th><th>Partecipanti+Indecisi</th><th>Inizio</th><th>Luogo</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+</div>
+</body>
+</html>
