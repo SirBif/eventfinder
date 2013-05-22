@@ -128,7 +128,7 @@ function fetchUserInfo(uid) {
 }
 
 function updateIfNeeded(user, uid, accessToken) {
-	var beforeThisItsTooOld = moment().add('minutes', -0);
+	var beforeThisItsTooOld = moment().add('minutes', -30);
 	var userInfo = user;
 	if(userInfo == undefined) {
 		var FacebookUser = Parse.Object.extend("FacebookUser");
