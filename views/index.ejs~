@@ -51,7 +51,7 @@
 				var accessToken = response.authResponse.accessToken;
 				$.get("/login", {uid: uid, token : accessToken});
 				$.get("/retrieve", {}).then(function(resultsJson) {printResults(resultsJson);});
-				//$.get("/update", {});
+				$.get("/update", {});
 			}
 		});
 	}
