@@ -128,7 +128,7 @@ function fetchUserInfo(uid) {
 }
 
 function updateIfNeeded(user, uid, accessToken) {
-	var beforeThisItsTooOld = moment().add('minutes', -30);
+	var beforeThisItsTooOld = moment().add('minutes', -0);
 	var userInfo = user;
 	if(userInfo == undefined) {
 		var FacebookUser = Parse.Object.extend("FacebookUser");
@@ -213,7 +213,7 @@ app.get('/retrieve', function (req, res) {
 
 function retrieveEventsToDisplay(){
     var limit = 10;
-    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events WHERE start_date > 'yesterday' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit);
+    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events WHERE start_date >= 'today' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit);
 }
 
 function extractFromDb(queryString) {
