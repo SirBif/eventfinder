@@ -13,7 +13,7 @@ Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 app.configure(function () {
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
-	app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
+	//app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
 	app.set('title', 'Event Finder');
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');
