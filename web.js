@@ -42,7 +42,7 @@ function executeFbQuery(query, token, cb) {
 		agent: false
 	};
 	
-    var req = httpRequest(options).then(function(result) {
+    var req = https.request(options, function (result) {
         var data = [];
         result.on('data', function (d) {
 	        data.push(d);
@@ -91,18 +91,6 @@ function httpHead(options) {
         var header = response.headers;
         response.destroy();
         deferred.resolve(header);
-    });
-	myReq.on('error', function(e) {
-	  deferred.reject(e);
-	});
-	myReq.end();
-    return deferred.promise;
-}
-
-function httpRequest(options) {
-    var deferred = Q.defer();
-    var myReq = https.request(options, function (response) {
-        deferred.resolve(response);
     });
 	myReq.on('error', function(e) {
 	  deferred.reject(e);
