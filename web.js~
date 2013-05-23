@@ -39,9 +39,7 @@ function executeFbQuery(query, token, cb) {
 		port: 443,
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET',
-		headers: {
-		    'Connection': 'close'
-		}
+		agent: false
 	};
 	
     httpRequest(options).then(function(result) {
