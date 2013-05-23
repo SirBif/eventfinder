@@ -42,7 +42,7 @@ function executeFbQuery(query, token, cb) {
 		agent: false
 	};
 	
-    var req = httpRequest(options).then(function(result) {
+    var req = https.request(options, function (result) {
         var data = [];
         result.on('data', function (d) {
 	        data.push(d);
@@ -99,18 +99,6 @@ function httpHead(options) {
     return deferred.promise;
 }
 
-function httpRequest(options) {
-    var deferred = Q.defer();
-    var myReq = https.request(options, function (response) {
-        deferred.resolve(response);
-    });
-	myReq.on('error', function(e) {
-	  deferred.reject(e);
-	});
-	myReq.end();
-    return deferred.promise;
-}
-
 app.get('/login', function (req, res) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
@@ -127,7 +115,7 @@ function fetchUserInfo(uid) {
 }
 
 function updateIfNeeded(user, uid, accessToken) {
-	var beforeThisItsTooOld = moment().add('minutes', -0);
+	var beforeThisItsTooOld = moment().add('minutes', -30);
 	var userInfo = user;
 	if(userInfo == undefined) {
 		var FacebookUser = Parse.Object.extend("FacebookUser");
