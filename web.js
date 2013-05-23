@@ -42,7 +42,7 @@ function executeFbQuery(query, token, cb) {
 		agent: false
 	};
 	
-    httpRequest(options).then(function(result) {
+    var req = httpRequest(options).then(function(result) {
         var data = [];
         result.on('data', function (d) {
 	        data.push(d);
@@ -60,6 +60,7 @@ function executeFbQuery(query, token, cb) {
 	        }
         });
     });
+    req.end();
 }
 
 function getNumberOfElements(size) {
