@@ -40,7 +40,7 @@ function executeFbQuery(query, token, cb) {
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET',
 		headers: {
-		    'Connection': 'keep-alive'
+		    'Connection': 'close'
 		}
 	};
 	
