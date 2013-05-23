@@ -299,6 +299,6 @@ function doTheBigUpdate() {
 function retrieveEventsToUpdate() {
     var limit = 5;
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '0 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT " + limit;
+    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '6 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT " + limit;
     return extractFromDb(query);
 };
