@@ -266,7 +266,7 @@ function updateEventInfo(eventData) {
 }
 
 function asyncRetrieve(eventRows, token) {
-    async.eachLimit(eventRows, 3, function(eventRow, cb) {
+    async.eachLimit(eventRows, 1, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token, function(fbData) {
             console.log('Retrieved fields for event ' + eventRow.eid);
             try{
