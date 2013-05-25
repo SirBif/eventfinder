@@ -17,20 +17,27 @@
 		height: 100%;		
     }
     #mapC {
-        display: table-cell;
         height: 100%;
+        background-color: #ff0000;
+        width: 80%;
+        float: left;
     }
     #fbButton{
         display: none;
     }
     #listContainer{
+        height: 100%;
+        background-color: #00ff00;
         width: 20%;
-        display: table-cell;
+        float: left;
+        overflow-y: scroll;
         
     }
     #resultTable{
-        display: table;
         height: 100%;	
+    }
+    li {
+        font-size: small;
     }
     </style>
 <div id="fb-root"></div>
@@ -121,9 +128,6 @@
 <!--present a graphical Login button that triggers the FB.login() function when clicked.-->
 <div id="resultTable">
     <div id="listContainer">
-        <div id="fbButton">
-            <fb:login-button show-faces="true" scope="user_events, friends_events" width="200" max-rows="1"></fb:login-button>
-        </div>
         <ol id="list"></ol>
     </div>
     <div id="mapC">

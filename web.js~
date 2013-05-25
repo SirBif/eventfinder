@@ -200,8 +200,8 @@ app.get('/retrieve', function (req, res) {
 });
 
 function retrieveEventsToDisplay(cb){
-    var limit = 10;
-    extractFromDb("SELECT name, start_date AS start_time, attending_total + maybe_total AS people, location, latitude, longitude FROM events WHERE start_date >= 'today' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit, cb);
+    var limit = 100;
+    extractFromDb("SELECT name, start_date AS start_time, attending_total AS people, location, latitude, longitude FROM events WHERE start_date >= 'today' AND start_date < (now() + interval '1 hour') AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit, cb);
 }
 
 function extractFromDb(queryString, cb) {
