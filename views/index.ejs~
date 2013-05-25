@@ -21,9 +21,6 @@
         width: 80%;
         float: left;
     }
-    #fbButton{
-        display: none;
-    }
     #listContainer{
         height: 100%;
         width: 20%;
@@ -36,6 +33,9 @@
     }
     li {
         font-size: small;
+    }    
+    #fbButton{
+        float: left;
     }
     .hide {
         display: none;
@@ -53,10 +53,13 @@
 		FB.Event.subscribe('auth.authResponseChange', function(response) {
 			// Here we specify what we do with the response anytime this event occurs. 
 			if (response.status === 'connected') {
+				$('#fbButton').addClass('hide');
 				handleLogin();
 			} else if (response.status === 'not_authorized') {
+			    $('#fbButton').removeClass('hide');
 				FB.login();
 			} else {
+			    $('#fbButton').removeClass('hide');
 				FB.login();
 			}
 		});
@@ -101,7 +104,7 @@
                 	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
                 	}
                 });
-                $('#list').append('<li><a href="http://www.facebook.com/' + entry.eid +'">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
+                $('#list').append('<li><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
                 i++;
             });
 		}
@@ -109,6 +112,9 @@
 </script>
 <!--Below we include the Login Button social plugin. This button uses the JavaScript SDK to-->
 <!--present a graphical Login button that triggers the FB.login() function when clicked.-->
+<div id="fbButton">
+    <fb:login-button show-faces="true" width="200" max-rows="1"></fb:login-button>
+</div>
 <div id="resultTable">
     <div id="listContainer">
         <ol id="list"></ol>
@@ -116,9 +122,6 @@
     <div id="mapC">
         <div id="mapContainer"></div>
     </div>
-</div>
-<div id="fbButton" class="hide">
-    <fb:login-button show-faces="true" width="200" max-rows="1"></fb:login-button>
 </div>
 <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
 <script src="js/jhere.min.js"></script>
