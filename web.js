@@ -181,7 +181,9 @@ function updateIntoDb(querySql, data) {
 }
 
 app.get('/retrieve', function (req, res) {
-    retrieveNearbyEvents(44.843699,11.619072, function(rows) {
+    var lat = req.query["lat"];
+    var lon = req.query["lon"];
+    retrieveNearbyEvents(lat, lon, function(rows) {
         res.writeHead(200, {'Content-Type': 'text/json'});
         res.end(JSON.stringify(rows));
     });

@@ -40,6 +40,9 @@
     .hide {
         display: none;
     }
+   .highlighted{
+        font-size: large;
+   }
     </style>
 <div id="fb-root"></div>
 <script>
@@ -80,8 +83,21 @@
 				var uid = response.authResponse.userID;
 				var accessToken = response.authResponse.accessToken;
 				$.jHERE.defaultCredentials('2555Yk0ixeYKXQe2OrXM', 'E5I47YZhcJA7W9P6eIebEA');
+			    $('#mapContainer').jHERE({
+                    enable: ['behavior', 'positioning'],
+                    center: [44.843699,11.619072],
+                    zoom: 9
+                });
+                $('#mapContainer').on('mapdragend', function(e){ 
+                    var properties = $('#mapContainer').jHERE();
+                    var lat = properties.center.latitude;
+                    var lon = properties.center.longitude;
+                    $('#mapContainer').jHERE('nomarkers');
+                    $('#list').empty();
+                    $.get("/retrieve?lat=" + lat + "&lon=" + lon, {}).then(function(resultsJson) {printResults(resultsJson);});
+                });
 				$.get("/login", {uid: uid, token : accessToken});
-				$.get("/retrieve", {}).then(function(resultsJson) {printResults(resultsJson);});
+				$.get("/retrieve?lat=44.843699&lon=11.619072", {}).then(function(resultsJson) {printResults(resultsJson);});
 				$.get("/update", {});
 			}
 		});
@@ -91,20 +107,18 @@
 		if(results == undefined) {			
             // stuff
 		} else {
-		  $('#mapContainer').jHERE({
-                enable: ['behavior', 'positioning'],
-                center: [44.843699,11.619072],
-                zoom: 8
-          });
           var i = 1;
 			results.forEach(function(entry) {			 	
 				$('#mapContainer').jHERE('marker', [parseFloat(entry.latitude), parseFloat(entry.longitude)], {
                 	text: i,
                 	click: function(event) {
                 	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
+                	},
+                	click: function(event) {
+                	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
                 	}
                 });
-                $('#list').append('<li><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
+                $('#list').append('<li id="item_' +i+ '"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
                 i++;
             });
 		}

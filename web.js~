@@ -201,8 +201,7 @@ function retrieveNearbyEvents(lat, lon, cb) {
     query += " AND last_update IS NOT NULL";
     query += " AND earth_box(ll_to_earth("+lat+", "+lon+"), 60000) @> ll_to_earth(events.latitude, events.longitude)";
     query += " ORDER BY people DESC LIMIT " + limit;
-    
-    console.log(query);extractFromDb(query, cb);
+    extractFromDb(query, cb);
 }
 
 function extractFromDb(queryString, cb) {
