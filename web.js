@@ -1,11 +1,9 @@
 var express = require('express');
 var util    = require('util');
 var https = require('https');
-https.globalAgent.maxSockets = 20;
 var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
-var Q = require('q');
 var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
@@ -67,7 +65,7 @@ function getNumberOfElements(size) {
    return (size - 10) / 12;
 }
 
-function executeFbQuery_HeadOnly(query, token) {
+function executeFbQuery_HeadOnly(query, token, cb) {
 	var options = {
 		host: 'graph.facebook.com',
 		port: 443,
@@ -75,28 +73,17 @@ function executeFbQuery_HeadOnly(query, token) {
 		method: 'GET',
 		headers: {
 		    'Accept-Encoding': 'identity',
-		    'Connection': 'keep-alive'
+		    'agent': false
 		}
 	};
-    httpHead(options).then(function(header) {
-        var elements = getNumberOfElements(header['content-length']);
-        console.log(elements);
-        return(elements);
-    });
-}
-
-function httpHead(options) {
-    var deferred = Q.defer();
     var myReq = https.request(options, function (response) {
         var header = response.headers;
-        response.destroy();
-        deferred.resolve(header);
+        response.destroy();        
+        var elements = getNumberOfElements(header['content-length']);
+        console.log(elements);
+        cb(elements);
     });
-	myReq.on('error', function(e) {
-	  deferred.reject(e);
-	});
-	myReq.end();
-    return deferred.promise;
+    myReq.end();
 }
 
 app.get('/login', function (req, res) {
@@ -145,12 +132,11 @@ function insertEvents(input) {
 }
 
 function insertIntoDb(querySql, data) {
-    var length = data.length;
-    var deferred = Q.defer();
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
-            deferred.reject(error);
+            return;
         }
+        var length = data.length;
         for (var i = 0; i < length; i++) {
             var query = client.query(querySql, [data[i].eid, data[i].start_time]);
             query.on('error', function(error) {
@@ -159,19 +145,15 @@ function insertIntoDb(querySql, data) {
                 }
                 done();
                 console.log(error);   
-                deferred.reject(error);
             });
             query.on('end', function(result) {
                 done();
             });
         }
-        deferred.resolve(); 
     });
-    return deferred.promise;
-};
+}
 
 function updateIntoDb(querySql, data) {
-    var deferred = Q.defer();
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             console.log(error);
@@ -181,16 +163,13 @@ function updateIntoDb(querySql, data) {
         query.on('error', function(error) {  
             done();    
             console.log(error);
-            deferred.reject(error);
         });
         query.on('end', function(result) {
             done();
             console.log('Saved');
-            deferred.resolve(result);  
         });
     });
-    return deferred.promise;
-};
+}
 
 app.get('/retrieve', function (req, res) {
     retrieveEventsToDisplay(function(rows) {
