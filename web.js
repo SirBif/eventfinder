@@ -95,6 +95,15 @@ app.get('/login', function (req, res) {
     fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
 });
 
+app.get('/updateParseDb', function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end();
+    console.log('Updating Parse DB');
+    retrieveEventsToDisplay(function(events) {
+    
+    });
+});
+
 function fetchUserInfo(uid) {
     var FacebookUser = Parse.Object.extend("FacebookUser");
 	var query = new Parse.Query(FacebookUser);
@@ -172,7 +181,7 @@ function updateIntoDb(querySql, data) {
 }
 
 app.get('/retrieve', function (req, res) {
-    retrieveEventsToDisplay(function(rows) {
+    retrieveNearbyEvents(44.843699,11.619072, function(rows) {
         res.writeHead(200, {'Content-Type': 'text/json'});
         res.end(JSON.stringify(rows));
     });
@@ -181,6 +190,19 @@ app.get('/retrieve', function (req, res) {
 function retrieveEventsToDisplay(cb){
     var limit = 100;
     extractFromDb("SELECT name, start_date AS start_time, attending_total AS people, location, latitude, longitude FROM events WHERE start_date >= 'today' AND start_date < (now() + interval '1 day') AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit, cb);
+}
+
+function retrieveNearbyEvents(lat, lon, cb) {
+    var limit = 100;
+    var query = "";
+    query += "SELECT name, start_date AS start_time, attending_total AS people, location, latitude, longitude, eid ";
+    query += "FROM events WHERE";
+    query += " start_date >= 'today' AND start_date < (now() + interval '1 day')";
+    query += " AND last_update IS NOT NULL";
+    query += " AND earth_box(ll_to_earth("+lat+", "+lon+"), 60000) @> ll_to_earth(events.latitude, events.longitude)";
+    query += " ORDER BY people DESC LIMIT " + limit;
+    
+    console.log(query);extractFromDb(query, cb);
 }
 
 function extractFromDb(queryString, cb) {
