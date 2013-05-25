@@ -13,8 +13,8 @@ Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 app.configure(function () {
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
-	//app.use(express.session({ secret: 'sdjdkssdm8sdf89fmdf8sdfmsd' }));
 	app.set('title', 'Event Finder');
+	app.use("/js", express.static(__dirname + '/js'));
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'ejs');
 });
@@ -102,7 +102,8 @@ function httpHead(options) {
 app.get('/login', function (req, res) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
-    res.end('Token received');
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end();
     console.log('Login from uid ' + uid);
     fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
 });
@@ -192,20 +193,19 @@ function updateIntoDb(querySql, data) {
 };
 
 app.get('/retrieve', function (req, res) {
-    retrieveEventsToDisplay().then(function(rows) {
-        res.setHeader('Content-type', 'text/json');
+    retrieveEventsToDisplay(function(rows) {
+        res.writeHead(200, {'Content-Type': 'text/json'});
         res.end(JSON.stringify(rows));
     });
 });
 
-function retrieveEventsToDisplay(){
+function retrieveEventsToDisplay(cb){
     var limit = 10;
-    return extractFromDb("SELECT name, start_date AS start_time, attending_total, maybe_total, location FROM events WHERE start_date >= 'today' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit);
+    extractFromDb("SELECT name, start_date AS start_time, attending_total AS people, location, latitude, longitude FROM events WHERE start_date >= 'today' AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit, cb);
 }
 
-function extractFromDb(queryString) {
+function extractFromDb(queryString, cb) {
     var results = [];
-    var deferred = Q.defer();
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             console.log(error);
@@ -214,17 +214,15 @@ function extractFromDb(queryString) {
         var query = client.query(queryString);
         query.on('error', function(error) {
             console.log(error);
-            deferred.reject(error);
         });
         query.on('row', function(row) {
             results.push(row);
         });
         query.on('end', function(result) {
             done();
-            deferred.resolve(results); 
+            cb(results); 
         });
     });
-    return deferred.promise;
 };
 
 function retrieveEventInfo(eid, tok, cb) {
@@ -243,7 +241,8 @@ function retrieveEventGirls(eid, tok) {
 }
 
 app.get('/update', function (req, res) {
-    res.end('mah');
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end();
     doTheBigUpdate();
 });
 
@@ -289,16 +288,16 @@ function getAToken() {
 }
 
 function doTheBigUpdate() {
-    extractFromDb("delete from events where start_date < now() - interval '24 hours'");
-    retrieveEventsToUpdate().then(function(eventRows) {
+    extractFromDb("delete from events where start_date < now() - interval '24 hours'", function(nvm) {});
+    retrieveEventsToUpdate(function(eventRows) {
         console.log('Number of events to update: ' + eventRows.length);
         getAToken().then(function(user) {asyncRetrieve(eventRows, user.get("token"));});
     });
 }
 
-function retrieveEventsToUpdate() {
+function retrieveEventsToUpdate(cb) {
     var limit = 5;
     console.log('Retrieving events to update');
     var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '6 hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT " + limit;
-    return extractFromDb(query);
+    extractFromDb(query, cb);
 };
