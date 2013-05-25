@@ -37,6 +37,9 @@
     li {
         font-size: small;
     }
+    .hide {
+        display: none;
+    }
     </style>
 <div id="fb-root"></div>
 <script>
@@ -52,9 +55,9 @@
 			if (response.status === 'connected') {
 				handleLogin();
 			} else if (response.status === 'not_authorized') {
-				login();
+				FB.login();
 			} else {
-				login();
+				FB.login();
 			}
 		});
 	};
@@ -99,28 +102,6 @@
             });
 		}
 	}
-
-	function addToRow(row, content) {
-		cell = document.createElement("TD");					 
-		textnode = document.createTextNode(content);					 
-		cell.appendChild(textnode);					 
-		row.appendChild(cell);
-	}
-
-  function login() {
-        Parse.FacebookUtils.logIn("user_events,friends_events", {
-		  success: function(user) {
-			if (!user.existed()) {
-			  alert("User signed up and logged in through Facebook!");
-			} else {
-			  alert("User logged in through Facebook!");
-			}
-		  },
-		  error: function(user, error) {
-			alert("User cancelled the Facebook login or did not fully authorize.");
-		  }
-		});
-	}
 </script>
 <!--Below we include the Login Button social plugin. This button uses the JavaScript SDK to-->
 <!--present a graphical Login button that triggers the FB.login() function when clicked.-->
@@ -131,6 +112,9 @@
     <div id="mapC">
         <div id="mapContainer"></div>
     </div>
+</div>
+<div id="fbButton" class="hide">
+    <fb:login-button show-faces="true" width="200" max-rows="1"></fb:login-button>
 </div>
 <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
 <script src="js/jhere.min.js"></script>
