@@ -37,7 +37,7 @@
     li {
         font-size: small;
     }
-    #fbButton {
+    .hide {
         display: none;
     }
     </style>
@@ -76,6 +76,7 @@
 			if (response.status === 'connected') {
 				var uid = response.authResponse.userID;
 				var accessToken = response.authResponse.accessToken;
+				$.jHERE.defaultCredentials('2555Yk0ixeYKXQe2OrXM', 'E5I47YZhcJA7W9P6eIebEA');
 				$.get("/login", {uid: uid, token : accessToken});
 				$.get("/retrieve", {}).then(function(resultsJson) {printResults(resultsJson);});
 				$.get("/update", {});
@@ -95,9 +96,12 @@
           var i = 1;
 			results.forEach(function(entry) {			 	
 				$('#mapContainer').jHERE('marker', [parseFloat(entry.latitude), parseFloat(entry.longitude)], {
-                	text: i
+                	text: i,
+                	click: function(event) {
+                	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
+                	}
                 });
-                $('#list').append('<li>' + entry.name + '</li>');
+                $('#list').append('<li><a href="http://www.facebook.com/' + entry.eid +'">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
                 i++;
             });
 		}
@@ -113,12 +117,10 @@
         <div id="mapContainer"></div>
     </div>
 </div>
-<div id="fbButton">
+<div id="fbButton" class="hide">
     <fb:login-button show-faces="true" width="200" max-rows="1"></fb:login-button>
 </div>
 <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
 <script src="js/jhere.min.js"></script>
-<script type="text/javascript">
-</script>
 </body>
 </html>
