@@ -302,11 +302,20 @@ function asyncRetrieve(eventRows, token) {
     });
 }
 
+var token;
+var last_check;
 function getAToken() {
-    var FacebookUser = Parse.Object.extend("FacebookUser");
-	var query = new Parse.Query(FacebookUser);
-	query.descending("updatedAt")
-	return query.first();
+    // if (now - last_check > 20 minutes)
+    var threshold = moment().subtract('minutes', 20);
+    if(last_check == undefined || threshold > last_check) {
+        console.log('Retrieving new token from Parse');
+        var FacebookUser = Parse.Object.extend("FacebookUser");
+	    var query = new Parse.Query(FacebookUser);
+	    query.descending("updatedAt")
+	    token = query.first();
+	    last_check = moment();
+    }
+    return token;
 }
 
 function doTheBigUpdate() {

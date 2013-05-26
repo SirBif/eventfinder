@@ -80,9 +80,6 @@ function printResults(results) {
             	text: i,
             	click: function(event) {
             	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
-            	},
-            	click: function(event) {
-            	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
             	}
             });
             $('#list').append('<li id="item_' +i+ '"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');

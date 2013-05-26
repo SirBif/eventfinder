@@ -1,6 +1,7 @@
+var fbAppId=180798855409162;
 window.fbAsyncInit = function() {		
 	FB.init({
-		appId      : 180798855409162, // Facebook App ID
+		appId      : fbAppId, // Facebook App ID
 		cookie     : true, // enable cookies to allow Parse to access the session
 		xfbml      : true  // parse XFBML
 	});
@@ -25,7 +26,7 @@ window.fbAsyncInit = function() {
 	var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
 	if (d.getElementById(id)) {return;}
 	js = d.createElement('script'); js.id = id; js.async = true;
-	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=180798855409162";
+	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId="+fbAppId;
 	ref.parentNode.insertBefore(js, ref);
 }(document));
 
@@ -80,8 +81,10 @@ function printResults(results) {
             	click: function(event) {
             	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
             	},
-            	click: function(event) {
-            	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
+            	mouseover: function(event) {
+            	    var id='#item_'+i;
+            	    $(id).addClass('highlighted');
+            	    console.log('over '+i);
             	}
             });
             $('#list').append('<li id="item_' +i+ '"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
