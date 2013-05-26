@@ -35,7 +35,7 @@ var port = process.env.PORT || 5000;
 });
 
 
-app.get('/', function (req, res) {
+app.get('/', function (req, res, next) {
 	res.render('index.html');
 });
 
@@ -94,7 +94,7 @@ function executeFbQuery_HeadOnly(query, token, cb) {
     myReq.end();
 }
 
-app.get('/login', function (req, res) {
+app.get('/login', function (req, res, next) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
     res.writeHead(200, {'Content-Type': 'text/html'});
@@ -102,15 +102,6 @@ app.get('/login', function (req, res) {
     console.log('Login from uid ' + uid);
     fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
     doTheBigUpdate();
-});
-
-app.get('/updateParseDb', function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end();
-    console.log('Updating Parse DB');
-    retrieveEventsToDisplay(function(events) {
-    
-    });
 });
 
 function fetchUserInfo(uid) {
@@ -189,15 +180,14 @@ function updateIntoDb(querySql, data) {
     });
 }
 
-app.get('/retrieve', function (req, res) {
+app.get('/retrieve', function (req, res, next) {
     console.log('Retrieve');
     var bottomRightLat = req.query["bottomRightLat"];
     var bottomRightLon = req.query["bottomRightLon"];
     var topLeftLat = req.query["topLeftLat"];
     var topLeftLon = req.query["topLeftLon"];
     retrieveEventsInBox({'latitude':bottomRightLat, 'longitude':bottomRightLon} , {'latitude':topLeftLat,'longitude':topLeftLon}, function(rows) {
-        res.writeHead(200, {'Content-Type': 'text/json'});
-        res.end(JSON.stringify(rows));
+        res.json(rows);
     });
 });
 
