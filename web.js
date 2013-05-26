@@ -4,8 +4,15 @@ var https = require('https');
 var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
-var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native`
-var app = express.createServer();
+var fs = require('fs');
+var pg = require('pg');
+
+var options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+
+var app = express.createServer(options);
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var fetchListOfEventsEveryXHours = 6;
@@ -32,10 +39,9 @@ app.configure(function () {
 });
 
 var port = process.env.PORT || 5000;
-    app.listen(port, function() {
+app.listen(port, function() {
     console.log("Listening on " + port);
 });
-
 
 app.get('/', function (req, res, next) {
 	res.render('index.html', {layout: false});
