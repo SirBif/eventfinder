@@ -24,7 +24,7 @@
 </div>
 <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
 <script src="js/jhere.min.js"></script>
-<script type="text/javascript" src="//raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
+<script src="//cdn.jsdelivr.net/momentjs/2.0.0/moment.min.js"></script>
 <script type="text/javascript" src="js/eventfinder.js"></script>
 </body>
 </html>
