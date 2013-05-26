@@ -26,8 +26,9 @@ app.configure(function () {
 	app.set('title', 'Event Finder');
 	app.use("/js", express.static(__dirname + '/js'));
 	app.use("/css", express.static(__dirname + '/css'));
-	app.use("/", express.static(__dirname + '/views'));
+	app.use("/misc", express.static(__dirname + '/misc'));
 	app.register('.html', require('ejs'));
+    app.set('views',__dirname+'/views');
 });
 
 var port = process.env.PORT || 5000;
@@ -37,7 +38,7 @@ var port = process.env.PORT || 5000;
 
 
 app.get('/', function (req, res, next) {
-	res.render('index.html');
+	res.render('index.html', {layout: false});
 });
 
 function executeFbQuery(query, token, cb) {

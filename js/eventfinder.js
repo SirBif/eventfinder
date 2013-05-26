@@ -2,7 +2,7 @@ var fbAppId=180798855409162;
 window.fbAsyncInit = function() {		
 	FB.init({
 		appId      : fbAppId, // Facebook App ID
-		channelUrl : '//enigmatic-cove-8808-735.herokuapp.com/channel.html',
+		channelUrl : '//enigmatic-cove-8808-735.herokuapp.com/misc/channel.html',
 		cookie     : true, // enable cookies to allow Parse to access the session
 		xfbml      : true  // parse XFBML
 	});
