@@ -12,7 +12,7 @@ var options = {
   cert: fs.readFileSync('cert.pem')
 };
 
-var app = express.createServer();
+var app = express.createServer(options);
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var fetchListOfEventsEveryXHours = 6;

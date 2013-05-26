@@ -7,12 +7,12 @@ var async = require('async');
 var fs = require('fs');
 var pg = require('pg');
 
-var options = {
+var serverOptions = {
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem')
 };
 
-var app = express.createServer(options);
+var app = express.createServer(serverOptions);
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var fetchListOfEventsEveryXHours = 6;
