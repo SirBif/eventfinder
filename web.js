@@ -42,7 +42,7 @@ app.get('/', function (req, res, next) {
 });
 
 app.post('/', function(request, response){ 
-    response.redirect("https://www.facebook.com/dialog/oauth?client_id="+process.env.FACEBOOK_APP_ID+"&redirect_uri=CANVAS_URL"); 
+    res.render('index.html', {layout: false});
 })
 
 function executeFbQuery(query, token, cb) {
