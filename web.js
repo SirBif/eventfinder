@@ -12,7 +12,7 @@ var fetchListOfEventsEveryXHours = 6;
 var numberOfEventsToRetrieve = 100;
 var parallelAsyncHttpRequests = 5;
 var maxEventsToUpdate = 5;
-var updateEventEveryXHours = 6;
+var updateEventEveryXHours = 4;
 var eventLimitForFbQuery = 50;
 var dateRangeToDisplay = "1 day";
 var askParseANewTokenAfterXMinutes = 20;
@@ -291,30 +291,40 @@ function asyncRetrieve(eventRows, token) {
     }, function(err) {
         if (err) {
             console.log('Retrieve problem:' +err);
+        } else {
+          doTheBigUpdate(); 
         }
     });
 }
 
 var token;
 var last_check;
-function getAToken() {
+function getAToken(cb) {
     var threshold = moment().subtract('minutes', askParseANewTokenAfterXMinutes);
     if(last_check == undefined || threshold > last_check) {
         console.log('Retrieving new token from Parse');
         var FacebookUser = Parse.Object.extend("FacebookUser");
 	    var query = new Parse.Query(FacebookUser);
 	    query.descending("updatedAt")
-	    token = query.first();
-	    last_check = moment();
+	    query.first().then(function(user) {
+	        token = user.get("token");
+	        last_check = moment();
+	        cb(token);
+	    });
+    } else {
+        cb(token);
     }
-    return token;
 }
 
 function doTheBigUpdate() {
     extractFromDb("delete from events where start_date < now()::date - interval '"+ deleteEventsOlderThan +"'", function(nvm) {});
     retrieveEventsToUpdate(function(eventRows) {
-        console.log('Number of events to update: ' + eventRows.length);
-        getAToken().then(function(user) {asyncRetrieve(eventRows, user.get("token"));});
+        if(eventRows.length > 0) {
+            console.log('Number of events to update: ' + eventRows.length);
+            getAToken(function(token) {asyncRetrieve(eventRows, token);});
+        } else {
+            console.log("No need to update the events data");
+        }
     });
 }
 
