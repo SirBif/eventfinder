@@ -33,13 +33,13 @@
 }
 </style>
  
-<div id="mobile-header">
-    <a id="responsive-menu-button" href="#sidr-main">Menu</a>
+<div id="toggleButton">
+    <a id="toggleMenu" href="#event-menu">Lista Eventi</a>
 </div>
  
 <script>
-    $('#responsive-menu-button').sidr({
-      name: 'sidr-main',
+    $('#toggleMenu').sidr({
+      name: 'event-menu',
       source: function() { return $('#navigation').children();}
     });
 </script>

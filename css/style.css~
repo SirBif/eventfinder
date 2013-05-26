@@ -3,22 +3,12 @@ html,body {
 }
 #mapContainer
 {
-	height: 100%;		
-}
-#mapC {
-    height: 100%;
-    width: 80%;
-    float: left;
-}
-#listContainer{
-    height: 100%;
-    width: 20%;
-    float: left;
-    overflow-y: auto;
-    
-}
-#resultTable{
-    height: 100%;
+	position: fixed;
+    z-index: 0;
+    top : 0px;
+    right: 0px;
+	height: 100%;
+	width: 100%		
 }
 li {
     font-size: small;
@@ -32,4 +22,25 @@ li {
 .highlighted{
     font-size: large;
     color: #ff0000;
+}
+#toggleButton{
+    position: fixed;
+    z-index: 3;
+    top : 20px;
+    right: 20px;
+    font: bold 11px Arial;
+    text-decoration: none;
+    background-color: #EEEEEE;
+    color: #333333;
+    padding: 2px 6px 2px 6px;
+    border-top: 1px solid #CCCCCC;
+    border-right: 1px solid #333333;
+    border-bottom: 1px solid #333333;
+    border-left: 1px solid #CCCCCC;
+}
+#event-menu {
+    position: fixed;
+    z-index: 2;
+    top : 0px;
+    right: 0px;
 }
