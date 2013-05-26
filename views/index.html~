@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" type="text/css" href="css/jquery.sidr.light.css">
   <link rel="stylesheet" type="text/css" href="css/style.css">
+  <link rel="apple-touch-icon-precomposed" href="/favicon.ico">
+  <link rel="icon" href="/favicon.ico">
 </head>
 <body>
 <div id="fb-root"></div>
@@ -23,8 +25,7 @@
 <script src="js/jhere.min.js"></script>
 <script src="//cdn.jsdelivr.net/momentjs/2.0.0/moment.min.js"></script>
 <script src="js/jquery.sidr.min.js"></script>
-<script type="text/javascript" src="js/eventfinder.js"></script>
- 
+<script type="text/javascript" src="js/eventfinder.js"></script> 
 <div id="toggleButton" class="hide">
     <a id="toggleMenu" href="#event-menu">Lista Eventi</a>
 </div>

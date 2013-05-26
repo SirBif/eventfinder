@@ -19,6 +19,7 @@ var askParseANewTokenAfterXMinutes = 20;
 var deleteEventsOlderThan = "24 hours";
 
 app.configure(function () {
+    app.use(express.favicon(__dirname + '/views/favicon.ico')); 
     app.use(express.compress());
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());

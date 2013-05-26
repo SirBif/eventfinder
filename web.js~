@@ -12,7 +12,7 @@ var fetchListOfEventsEveryXHours = 6;
 var numberOfEventsToRetrieve = 100;
 var parallelAsyncHttpRequests = 5;
 var maxEventsToUpdate = 5;
-var updateEventEveryXHours = 1;
+var updateEventEveryXHours = 4;
 var eventLimitForFbQuery = 50;
 var dateRangeToDisplay = "1 day";
 var askParseANewTokenAfterXMinutes = 20;
@@ -20,6 +20,7 @@ var deleteEventsOlderThan = "24 hours";
 
 app.configure(function () {
     app.use(express.compress());
+    app.use(express.favicon(__dirname + '/views/favicon.ico')); 
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
 	app.set('title', 'Event Finder');
