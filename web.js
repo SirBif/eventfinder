@@ -8,7 +8,7 @@ var pg = require('pg'); //native libpq bindings = `var pg = require('pg').native
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
-var fetchListOfEventsEveryXHpurs = 6;
+var fetchListOfEventsEveryXHours = 6;
 var numberOfEventsToRetrieve = 100;
 var parallelAsyncHttpRequests = 5;
 var maxEventsToUpdate = 5;
@@ -124,7 +124,7 @@ function fetchUserInfo(uid) {
 }
 
 function updateIfNeeded(user, uid, accessToken) {
-	var beforeThisItsTooOld = moment().subtract('hours', fetchListOfEventsEveryXHpurs);
+	var beforeThisItsTooOld = moment().subtract('hours', fetchListOfEventsEveryXHours);
 	var userInfo = user;
 	if(userInfo == undefined) {
 		var FacebookUser = Parse.Object.extend("FacebookUser");
@@ -310,7 +310,6 @@ function asyncRetrieve(eventRows, token) {
 var token;
 var last_check;
 function getAToken() {
-    // if (now - last_check > 20 minutes)
     var threshold = moment().subtract('minutes', askParseANewTokenAfterXMinutes);
     if(last_check == undefined || threshold > last_check) {
         console.log('Retrieving new token from Parse');
