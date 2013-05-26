@@ -79,18 +79,40 @@ function handleLogin() {
 	});
 }
 
+function getContent(entry) {
+    var result = "";
+    result += '<a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a></br>';
+    result += "Start: " + moment(entry.start_time).fromNow() + '</br>';
+    result += (entry.end_time) ? "End: " + moment(entry.end_time).fromNow() + '</br>' : "";
+    result += "Location: " + entry.location + '</br>';
+    result += "Going: " + entry.people + '</br>';
+    return result;
+}
+
 function printResults(results) {
 	if(results == undefined) {			
         // stuff
 	} else {
 	  $('#mapContainer').jHERE('nomarkers');
       var i = 1;
-		results.forEach(function(entry) {			 	
-			$('#mapContainer').jHERE('marker', [parseFloat(entry.latitude), parseFloat(entry.longitude)], {
+		results.forEach(function(entry) {
+		    var positionArray = [parseFloat(entry.latitude), parseFloat(entry.longitude)];			 	
+			$('#mapContainer').jHERE('marker', positionArray, {
             	text: i,
-            	click: function(event) {
-            	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
-            	}
+            	mouseenter: function(event) {
+            	    $('#mapContainer').jHERE(
+            	        'bubble',
+            	        positionArray,
+            	        {closable: true, content: getContent(entry)}
+            	    );
+                },
+                click: function(event) {
+            	    $('#mapContainer').jHERE(
+            	        'bubble',
+            	        positionArray,
+            	        {closable: true, content: getContent(entry)}
+            	    );
+                }
             });
             $('#list').append('<li id="item_' +i+ '"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
             i++;

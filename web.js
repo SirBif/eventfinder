@@ -206,9 +206,10 @@ function retrieveNearbyEvents(lat, lon, cb) {
 */
 function retrieveEventsInBox(bottomRight, topLeft, cb) {
     var query = "";
-    query += "SELECT name, start_date AS start_time, attending_total AS people, location, latitude, longitude, eid ";
+    query += "SELECT name, start_date AS start_time, end_date AS end_time, attending_total AS people, location, latitude, longitude, eid ";
     query += "FROM events WHERE";
     query += " start_date >= now()::date AND start_date < (now()::date + interval '" + dateRangeToDisplay + "')";
+    query += " AND (end_date IS NULL OR end_date > now())";
     query += " AND last_update IS NOT NULL";
     query += " AND latitude > " + bottomRight.latitude;
     query += " AND latitude < " + topLeft.latitude;
