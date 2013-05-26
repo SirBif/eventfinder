@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Eventi</title>
+  <title>Eventi di oggi</title>
   <meta name="description" content="Event Finder">
   <meta name="viewport" content="width=device-width">
   <script type="text/javascript" src="//raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
@@ -96,11 +96,12 @@
 			if (response.status === 'connected') {
 				var uid = response.authResponse.userID;
 				var accessToken = response.authResponse.accessToken;
-				$.jHERE.defaultCredentials('2555Yk0ixeYKXQe2OrXM', 'E5I47YZhcJA7W9P6eIebEA');
 			    $('#mapContainer').jHERE({
                     enable: ['behavior', 'positioning'],
                     center: [44.843699,11.619072],
-                    zoom: 9
+                    zoom: 9,
+                    appId: '2555Yk0ixeYKXQe2OrXM',
+                    authToken: 'E5I47YZhcJA7W9P6eIebEA'
                 });
                 $('#mapContainer').on('mapdragend', function(e) {updateMarkers();});
                 $('#mapContainer').on('mapresize', function(e) {updateMarkers();});
@@ -110,9 +111,8 @@
 	                    updateMarkers();
                     });
                 });
-                
 				$.get("/login", {uid: uid, token : accessToken});
-				$.get("/update", {});
+				$.get("/update", {})
 			}
 		});
 	}

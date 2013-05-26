@@ -181,6 +181,7 @@ function updateIntoDb(querySql, data) {
 }
 
 app.get('/retrieve', function (req, res) {
+    console.log('Retrieve');
     var bottomRightLat = req.query["bottomRightLat"];
     var bottomRightLon = req.query["bottomRightLon"];
     var topLeftLat = req.query["topLeftLat"];
@@ -190,12 +191,13 @@ app.get('/retrieve', function (req, res) {
         res.end(JSON.stringify(rows));
     });
 });
-
+/*
 function retrieveEventsToDisplay(cb){
     var limit = 100;
     extractFromDb("SELECT name, start_date AS start_time, attending_total AS people, location, latitude, longitude FROM events WHERE start_date >= 'today' AND start_date < (now() + interval '1 day') AND last_update IS NOT NULL ORDER BY start_date ASC LIMIT " + limit, cb);
 }
-
+*/
+/*
 function retrieveNearbyEvents(lat, lon, cb) {
     var limit = 100;
     var query = "";
@@ -207,13 +209,13 @@ function retrieveNearbyEvents(lat, lon, cb) {
     query += " ORDER BY people DESC LIMIT " + limit;
     extractFromDb(query, cb);
 }
-
+*/
 function retrieveEventsInBox(bottomRight, topLeft, cb) {
     var limit = 100;
     var query = "";
     query += "SELECT name, start_date AS start_time, attending_total AS people, location, latitude, longitude, eid ";
     query += "FROM events WHERE";
-    query += " start_date >= 'today' AND start_date < (now() + interval '1 day')";
+    query += " start_date >= now()::date AND start_date < (now()::date + interval '1 day')";
     query += " AND last_update IS NOT NULL";
     query += " AND latitude > " + bottomRight.latitude;
     query += " AND latitude < " + topLeft.latitude;
