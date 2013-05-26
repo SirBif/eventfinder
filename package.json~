@@ -8,7 +8,6 @@
 	"pg": "*",
 	"parse" : "*",
 	"moment" : "*",
-	"fs": "*"
 	
   },
   "engines": {
