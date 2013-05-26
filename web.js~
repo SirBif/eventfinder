@@ -27,7 +27,6 @@ app.configure(function () {
 	app.use("/js", express.static(__dirname + '/js'));
 	app.use("/css", express.static(__dirname + '/css'));
 	app.use("/misc", express.static(__dirname + '/misc'));
-	//app.set('view engine', 'ejs');
 	app.register('.html', require('ejs'));
     app.set('views',__dirname+'/views');
 });
