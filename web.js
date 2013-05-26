@@ -4,15 +4,16 @@ var https = require('https');
 var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
-var fs = require('fs');
 var pg = require('pg');
-
+/*
+//var fs = require('fs');
 var serverOptions = {
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem')
 };
-
 var app = express.createServer(serverOptions);
+*/
+var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var fetchListOfEventsEveryXHours = 6;
