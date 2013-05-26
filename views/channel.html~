@@ -1,0 +1,9 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" > 
+<head> 
+    <title>Cross-Domain Receiver Page</title> 
+</head> 
+<body> 
+    <script src="//connect.facebook.net/en_US/all.js2" type="text/javascript"></script> 
+</body> 
+</html>

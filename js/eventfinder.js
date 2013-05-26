@@ -2,6 +2,7 @@ var fbAppId=180798855409162;
 window.fbAsyncInit = function() {		
 	FB.init({
 		appId      : fbAppId, // Facebook App ID
+		channelUrl : '//enigmatic-cove-8808-735.herokuapp.com/channel.html',
 		cookie     : true, // enable cookies to allow Parse to access the session
 		xfbml      : true  // parse XFBML
 	});
@@ -10,6 +11,7 @@ window.fbAsyncInit = function() {
 		// Here we specify what we do with the response anytime this event occurs. 
 		if (response.status === 'connected') {
 			$('#fbButton').addClass('hide');
+			$('#toggleButton').removeClass('hide');
 			handleLogin();
 		} else if (response.status === 'not_authorized') {
 		    $('#fbButton').removeClass('hide');
@@ -26,7 +28,7 @@ window.fbAsyncInit = function() {
 	var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
 	if (d.getElementById(id)) {return;}
 	js = d.createElement('script'); js.id = id; js.async = true;
-	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId="+fbAppId;
+	js.src = "//connect.facebook.net/en_US/all.js";
 	ref.parentNode.insertBefore(js, ref);
 }(document));
 
@@ -60,6 +62,10 @@ function handleLogin() {
                 zoom: 9,
                 appId: '2555Yk0ixeYKXQe2OrXM',
                 authToken: 'E5I47YZhcJA7W9P6eIebEA'
+            });
+            $('#toggleMenu').sidr({
+              name: 'event-menu',
+              source: function() { return $('#navigation').children();}
             });
             $('#mapContainer').jHERE('originalMap', function(map, here) {
                 map.addListener("mapviewchangeend", function (obj, key, newValue, oldValue) {
