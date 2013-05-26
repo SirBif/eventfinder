@@ -26,7 +26,7 @@ app.configure(function () {
 	app.use("/js", express.static(__dirname + '/js'));
 	app.use("/css", express.static(__dirname + '/css'));
 	app.use("/", express.static(__dirname + '/views'));
-	app.set('view engine', 'ejs');
+	app.register('.html', require('ejs'));
 });
 
 var port = process.env.PORT || 5000;
@@ -36,11 +36,7 @@ var port = process.env.PORT || 5000;
 
 
 app.get('/', function (req, res) {
-	res.render('index.html', {
-        layout:    false,
-        req:       req,
-        app:       app,
-	});
+	res.render('index.html');
 });
 
 function executeFbQuery(query, token, cb) {
