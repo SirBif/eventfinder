@@ -24,7 +24,7 @@ app.configure(function () {
 	app.set('title', 'Event Finder');
 	app.use("/js", express.static(__dirname + '/js'));
 	app.use("/css", express.static(__dirname + '/css'));
-	app.set('views', __dirname + '/views');
+	app.use("/", express.static(__dirname + '/views'));
 	app.set('view engine', 'ejs');
 });
 
@@ -310,7 +310,6 @@ function asyncRetrieve(eventRows, token) {
 var token;
 var last_check;
 function getAToken() {
-    // if (now - last_check > 20 minutes)
     var threshold = moment().subtract('minutes', askParseANewTokenAfterXMinutes);
     if(last_check == undefined || threshold > last_check) {
         console.log('Retrieving new token from Parse');

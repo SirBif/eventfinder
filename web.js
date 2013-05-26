@@ -24,7 +24,7 @@ app.configure(function () {
 	app.set('title', 'Event Finder');
 	app.use("/js", express.static(__dirname + '/js'));
 	app.use("/css", express.static(__dirname + '/css'));
-	app.set('views', __dirname + '/views');
+	app.use("/", express.static(__dirname + '/views'));
 	app.set('view engine', 'ejs');
 });
 
