@@ -94,6 +94,7 @@ app.get('/login', function (req, res) {
     res.end();
     console.log('Login from uid ' + uid);
     fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
+    doTheBigUpdate();
 });
 
 app.get('/updateParseDb', function (req, res) {

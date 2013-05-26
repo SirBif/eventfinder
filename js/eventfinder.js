@@ -65,7 +65,6 @@ function handleLogin() {
                 });
             });
 			$.get("/login", {uid: uid, token : accessToken});
-			$.get("/update", {})
 		}
 	});
 }
