@@ -1,0 +1,92 @@
+var fbAppId=180798855409162;
+window.fbAsyncInit = function() {		
+	FB.init({
+		appId      : fbAppId, // Facebook App ID
+		cookie     : true, // enable cookies to allow Parse to access the session
+		xfbml      : true  // parse XFBML
+	});
+
+	FB.Event.subscribe('auth.authResponseChange', function(response) {
+		// Here we specify what we do with the response anytime this event occurs. 
+		if (response.status === 'connected') {
+			$('#fbButton').addClass('hide');
+			handleLogin();
+		} else if (response.status === 'not_authorized') {
+		    $('#fbButton').removeClass('hide');
+			FB.login();
+		} else {
+		    $('#fbButton').removeClass('hide');
+			FB.login();
+		}
+	});
+};
+
+// Load the SDK asynchronously
+(function(d){
+	var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+	if (d.getElementById(id)) {return;}
+	js = d.createElement('script'); js.id = id; js.async = true;
+	js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId="+fbAppId;
+	ref.parentNode.insertBefore(js, ref);
+}(document));
+
+function updateMarkers() {
+    var properties = $('#mapContainer').jHERE();
+    var bottomRight = properties.bbox.bottomRight;
+    var topLeft = properties.bbox.topLeft;
+    $('#mapContainer').jHERE('nomarkers');
+    $('#list').empty();
+    var requestString = "/retrieve?";
+    requestString += "bottomRightLat=" + bottomRight.latitude;
+    requestString += "&bottomRightLon=" + bottomRight.longitude;
+    requestString += "&topLeftLat=" + topLeft.latitude;
+    requestString += "&topLeftLon=" + topLeft.longitude;
+    $.get(requestString, {}).then(function(resultsJson) {printResults(resultsJson);});
+}
+
+function handleLogin() {
+	FB.getLoginStatus(function(response) {
+		if (response.status === 'connected') {
+			var uid = response.authResponse.userID;
+			var accessToken = response.authResponse.accessToken;
+		    $('#mapContainer').jHERE({
+                enable: ['behavior', 'positioning'],
+                center: [44.843699,11.619072],
+                zoom: 9,
+                appId: '2555Yk0ixeYKXQe2OrXM',
+                authToken: 'E5I47YZhcJA7W9P6eIebEA'
+            });
+            $('#mapContainer').on('mapdragend', function(e) {updateMarkers();});
+            $('#mapContainer').on('mapresize', function(e) {updateMarkers();});
+            $('#mapContainer').on('maptouchend', function(e) {updateMarkers();});
+            $('#mapContainer').jHERE('originalMap', function(map, here) {
+                map.addObserver("zoomLevel", function (obj, key, newValue, oldValue) {
+                    updateMarkers();
+                });
+            });
+			$.get("/login", {uid: uid, token : accessToken});
+			$.get("/update", {})
+		}
+	});
+}
+
+function printResults(results) {
+	if(results == undefined) {			
+        // stuff
+	} else {
+      var i = 1;
+		results.forEach(function(entry) {			 	
+			$('#mapContainer').jHERE('marker', [parseFloat(entry.latitude), parseFloat(entry.longitude)], {
+            	text: i,
+            	click: function(event) {
+            	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
+            	},
+            	click: function(event) {
+            	    window.open("http://www.facebook.com/" + entry.eid,'_blank');
+            	}
+            });
+            $('#list').append('<li id="item_' +i+ '"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
+            i++;
+        });
+	}
+}
