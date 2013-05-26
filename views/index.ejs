@@ -77,6 +77,20 @@
 		ref.parentNode.insertBefore(js, ref);
 	}(document));
 	
+	function updateMarkers() {
+	    var properties = $('#mapContainer').jHERE();
+        var bottomRight = properties.bbox.bottomRight;
+        var topLeft = properties.bbox.topLeft;
+        $('#mapContainer').jHERE('nomarkers');
+        $('#list').empty();
+        var requestString = "/retrieve?";
+        requestString += "bottomRightLat=" + bottomRight.latitude;
+        requestString += "&bottomRightLon=" + bottomRight.longitude;
+        requestString += "&topLeftLat=" + topLeft.latitude;
+        requestString += "&topLeftLon=" + topLeft.longitude;
+        $.get(requestString, {}).then(function(resultsJson) {printResults(resultsJson);});
+	}
+	
 	function handleLogin() {
 		FB.getLoginStatus(function(response) {
 			if (response.status === 'connected') {
@@ -88,21 +102,21 @@
                     center: [44.843699,11.619072],
                     zoom: 9
                 });
-                $('#mapContainer').on('mapdragend', function(e){ 
-                    var properties = $('#mapContainer').jHERE();
-                    var lat = properties.center.latitude;
-                    var lon = properties.center.longitude;
-                    $('#mapContainer').jHERE('nomarkers');
-                    $('#list').empty();
-                    $.get("/retrieve?lat=" + lat + "&lon=" + lon, {}).then(function(resultsJson) {printResults(resultsJson);});
+                $('#mapContainer').on('mapdragend', function(e) {updateMarkers();});
+                $('#mapContainer').on('mapresize', function(e) {updateMarkers();});
+                $('#mapContainer').on('maptouchend', function(e) {updateMarkers();});
+                $('#mapContainer').jHERE('originalMap', function(map, here) {
+	                map.addObserver("zoomLevel", function (obj, key, newValue, oldValue) {
+	                    updateMarkers();
+                    });
                 });
+                
 				$.get("/login", {uid: uid, token : accessToken});
-				$.get("/retrieve?lat=44.843699&lon=11.619072", {}).then(function(resultsJson) {printResults(resultsJson);});
 				$.get("/update", {});
 			}
 		});
 	}
-	
+
 	function printResults(results) {
 		if(results == undefined) {			
             // stuff
