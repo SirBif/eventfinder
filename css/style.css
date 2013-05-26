@@ -26,8 +26,8 @@ li {
 #toggleButton{
     position: fixed;
     z-index: 3;
-    top : 20px;
-    right: 20px;
+    top : 5px;
+    right: 5px;
     text-decoration: none;
     background-color: #EEEEEE;
     color: #333333;
