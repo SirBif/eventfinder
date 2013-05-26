@@ -55,7 +55,7 @@ function handleLogin() {
 			var uid = response.authResponse.userID;
 			var accessToken = response.authResponse.accessToken;
 		    $('#mapContainer').jHERE({
-                enable: ['behavior', 'positioning'],
+                enable: ['behavior', 'positioning', 'zoombar', 'scalebar'],
                 center: [44.843699,11.619072],
                 zoom: 9,
                 appId: '2555Yk0ixeYKXQe2OrXM',

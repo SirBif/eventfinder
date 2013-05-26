@@ -3,22 +3,8 @@ html,body {
 }
 #mapContainer
 {
-	height: 100%;		
-}
-#mapC {
-    height: 100%;
-    width: 80%;
-    float: left;
-}
-#listContainer{
-    height: 100%;
-    width: 20%;
-    float: left;
-    overflow-y: auto;
-    
-}
-#resultTable{
-    height: 100%;
+	height: 100%;
+	width: 100%		
 }
 li {
     font-size: small;
