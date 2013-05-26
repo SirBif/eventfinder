@@ -19,7 +19,7 @@ var askParseANewTokenAfterXMinutes = 20;
 var deleteEventsOlderThan = "24 hours";
 
 app.configure(function () {
-    app.use(express.favicon(__dirname + '/views/favicon.ico')); 
+    app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
     app.use(express.compress());
 	app.use(express.bodyParser());
 	app.use(express.cookieParser());
@@ -37,7 +37,7 @@ var port = process.env.PORT || 5000;
 });
 
 
-app.get('/', function (req, res, next) {
+app.all('/', function (req, res, next) {
 	res.render('index.html', {layout: false});
 });
 

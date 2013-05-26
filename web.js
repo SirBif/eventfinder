@@ -37,7 +37,7 @@ var port = process.env.PORT || 5000;
 });
 
 
-app.get('/', function (req, res, next) {
+app.all('/', function (req, res, next) {
 	res.render('index.html', {layout: false});
 });
 
@@ -257,11 +257,12 @@ function retrieveEventGirls(eid, tok) {
 	return executeFbQuery_HeadOnly(query, tok);
 }
 
+/*
 app.get('/update', function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     doTheBigUpdate();
-});
+});*/
 
 function updateEventInfo(eventData) {
     var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6, name=left($7, 100), last_update = now() WHERE eid = $8;";
