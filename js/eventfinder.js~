@@ -63,9 +63,9 @@ function handleLogin() {
                 map.addObserver("zoomLevel", function (obj, key, newValue, oldValue) {
                     updateMarkers();
                 });
+                updateMarkers();
             });
 			$.get("/login", {uid: uid, token : accessToken});
-			$.get("/update", {})
 		}
 	});
 }

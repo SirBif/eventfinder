@@ -63,6 +63,8 @@ function handleLogin() {
                 map.addObserver("zoomLevel", function (obj, key, newValue, oldValue) {
                     updateMarkers();
                 });
+                //we load the markers for the 1st time
+                updateMarkers();
             });
 			$.get("/login", {uid: uid, token : accessToken});
 		}
