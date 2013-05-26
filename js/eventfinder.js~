@@ -30,20 +30,25 @@ window.fbAsyncInit = function() {
 	ref.parentNode.insertBefore(js, ref);
 }(document));
 
+var activeCount = 0;
 function updateMarkers() {
-    var properties = $('#mapContainer').jHERE();
-    var bottomRight = properties.bbox.bottomRight;
-    var topLeft = properties.bbox.topLeft;
-    $('#mapContainer').jHERE('nomarkers');
-    $('#list').empty();
-    var requestString = "/retrieve?";
-    requestString += "bottomRightLat=" + bottomRight.latitude;
-    requestString += "&bottomRightLon=" + bottomRight.longitude;
-    requestString += "&topLeftLat=" + topLeft.latitude;
-    requestString += "&topLeftLon=" + topLeft.longitude;
-    $.get(requestString, {}).then(function(resultsJson) {printResults(resultsJson);});
+    activeCount++;
+    if(activeCount == 1) {
+        var properties = $('#mapContainer').jHERE();
+        var bottomRight = properties.bbox.bottomRight;
+        var topLeft = properties.bbox.topLeft;
+        $('#list').empty();
+        var requestString = "/retrieve?";
+        requestString += "bottomRightLat=" + bottomRight.latitude;
+        requestString += "&bottomRightLon=" + bottomRight.longitude;
+        requestString += "&topLeftLat=" + topLeft.latitude;
+        requestString += "&topLeftLon=" + topLeft.longitude;
+        $.get(requestString, {}).then(function(resultsJson) {printResults(resultsJson);});
+    }
+    activeCount--;
 }
 
+var lastRefresh = moment();
 function handleLogin() {
 	FB.getLoginStatus(function(response) {
 		if (response.status === 'connected') {
@@ -56,13 +61,19 @@ function handleLogin() {
                 appId: '2555Yk0ixeYKXQe2OrXM',
                 authToken: 'E5I47YZhcJA7W9P6eIebEA'
             });
-            $('#mapContainer').on('mapdragend', function(e) {updateMarkers();});
-            $('#mapContainer').on('mapresize', function(e) {updateMarkers();});
-            $('#mapContainer').on('maptouchend', function(e) {updateMarkers();});
+            //$('#mapContainer').on('mapdragend', function(e) {updateMarkers();});
+            //$('#mapContainer').on('mapresize', function(e) {updateMarkers();});
+            //$('#mapContainer').on('maptouchend', function(e) {updateMarkers();});
             $('#mapContainer').jHERE('originalMap', function(map, here) {
+                map.addListener("mapviewchangeend", function (obj, key, newValue, oldValue) {
+                    updateMarkers();  
+                }, false);
+                
+                /*
                 map.addObserver("zoomLevel", function (obj, key, newValue, oldValue) {
-                    updateMarkers();
-                });
+                    updateMarkers();  
+                });*/
+                //we load the markers for the 1st time
                 updateMarkers();
             });
 			$.get("/login", {uid: uid, token : accessToken});
@@ -74,6 +85,7 @@ function printResults(results) {
 	if(results == undefined) {			
         // stuff
 	} else {
+	  $('#mapContainer').jHERE('nomarkers');
       var i = 1;
 		results.forEach(function(entry) {			 	
 			$('#mapContainer').jHERE('marker', [parseFloat(entry.latitude), parseFloat(entry.longitude)], {
