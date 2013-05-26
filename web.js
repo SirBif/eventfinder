@@ -37,9 +37,13 @@ var port = process.env.PORT || 5000;
 });
 
 
-app.all('/', function (req, res, next) {
+app.get('/', function (req, res, next) {
 	res.render('index.html', {layout: false});
 });
+
+app.post('/', function(request, response){ 
+    response.redirect("https://www.facebook.com/dialog/oauth?client_id="+process.env.FACEBOOK_APP_ID+"&redirect_uri=CANVAS_URL"); 
+})
 
 function executeFbQuery(query, token, cb) {
 	var options = {
