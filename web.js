@@ -35,7 +35,7 @@ var port = process.env.PORT || 5000;
 
 
 app.get('/', function (req, res) {
-	res.render('index.ejs', {
+	res.render('index.html', {
         layout:    false,
         req:       req,
         app:       app,
