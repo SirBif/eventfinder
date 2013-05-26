@@ -2,48 +2,12 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Eventi</title>
+  <title>Eventi di oggi</title>
   <meta name="description" content="Event Finder">
   <meta name="viewport" content="width=device-width">
-  <script type="text/javascript" src="//raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
-<style type="text/css">
-    html,body {
-		height: 100%
-	}
-	#mapContainer
-    {
-		height: 100%;		
-    }
-    #mapC {
-        height: 100%;
-        width: 80%;
-        float: left;
-    }
-    #listContainer{
-        height: 100%;
-        width: 20%;
-        float: left;
-        overflow-y: auto;
-        
-    }
-    #resultTable{
-        height: 100%;
-    }
-    li {
-        font-size: small;
-    }    
-    #fbButton{
-        float: left;
-    }
-    .hide {
-        display: none;
-    }
-   .highlighted{
-        font-size: large;
-   }
-    </style>
 <div id="fb-root"></div>
 <script>
 	window.fbAsyncInit = function() {		
@@ -153,5 +117,6 @@
 </div>
 <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
 <script src="js/jhere.min.js"></script>
+<script type="text/javascript" src="//raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
 </body>
 </html>
