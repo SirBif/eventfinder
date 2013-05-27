@@ -75,7 +75,7 @@ function executeFbQuery(query, token, cb) {
                 console.log('Data Retrieved');
                 cb(theData);
 	        } else {
-	            console.log('FB query ended with error: '+theData);   
+	            console.log('FB query ended with error: '+ JSON.stringify(theData));   
 	        }
         });
     });
