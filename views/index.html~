@@ -20,7 +20,7 @@
     </nav>
 </div>
 <div id="mapContainer"></div>
-<script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="js/jhere.min.js"></script>
 <script src="//cdn.jsdelivr.net/momentjs/2.0.0/moment.min.js"></script>
 <script src="js/jquery.sidr.min.js"></script>
@@ -29,7 +29,7 @@
     <a id="toggleMenu" href="#event-menu">Lista Eventi</a>
 </div>
 <div id="fbButton">
-    <fb:login-button show-faces="false" width="200" max-rows="1"></fb:login-button>
+    <fb:login-button scope="user_events, friends_events" width="200" max-rows="1"></fb:login-button>
 </div>
 </body>
 </html>
