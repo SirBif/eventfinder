@@ -112,9 +112,10 @@ app.get('/login', function (req, res, next) {
     var accessToken = req.query["token"];
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
+    token = accessToken;
+    last_check = moment();
     console.log('Login from uid ' + uid);
     fetchUserInfo(uid).then(function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
-    doTheBigUpdate();
 });
 
 function fetchUserInfo(uid) {
@@ -146,31 +147,40 @@ function updateIfNeeded(user, uid, accessToken) {
 
 function doAnUpdate(token) {
 	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT "+ eventLimitForFbQuery +") ORDER BY start_time ASC";
-	return executeFbQuery(query, token, function(results) {return insertEvents(results);});
+	executeFbQuery(query, token, function(results) {insertEventsIntoDb(results.data);});
 }
 
-function insertEvents(input) {
-    return insertIntoDb("INSERT INTO events(eid, start_date) values($1, $2);", input.data);
+function doQuery(client, querySql, eid, start_time, cb) {
+    var query = client.query(querySql, [eid, start_time]);
+    query.on('error', function(error) {
+        if(error.code == 23505) { //if it's already present
+            error = 'Already present: ' + eid;
+        }
+        cb();
+        console.log(error);   
+    });
+    query.on('end', function(result) {
+        cb();
+        if(result != undefined) {
+            console.log('Adding event ' + eid);
+            getAToken(function(token) {
+                retrieveEventInfo(eid, token, function(fbData) {
+                    writeSingleUpdateToDb(fbData, eid, function() {});
+                });
+            });
+        }
+    });
 }
 
-function insertIntoDb(querySql, data) {
+function insertEventsIntoDb(data) {
+    var querySql = "INSERT INTO events(eid, start_date) values($1, $2);";
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             return;
         }
         var length = data.length;
         for (var i = 0; i < length; i++) {
-            var query = client.query(querySql, [data[i].eid, data[i].start_time]);
-            query.on('error', function(error) {
-                if(error.code == 23505) { //if it's already present
-                    error = 'Already present';
-                }
-                done();
-                console.log(error);   
-            });
-            query.on('end', function(result) {
-                done();
-            });
+            doQuery(client, querySql, data[i].eid, data[i].start_time, done);
         }
     });
 }
@@ -268,39 +278,43 @@ function retrieveEventGirls(eid, tok) {
 	return executeFbQuery_HeadOnly(query, tok);
 }
 
-/*
+
 app.get('/update', function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     doTheBigUpdate();
-});*/
+});
 
 function updateEventInfo(eventData) {
     var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6, name=left($7, 100), last_update = now() WHERE eid = $8;";
     updateIntoDb(query, eventData);
 }
 
+function writeSingleUpdateToDb(fbData, eid, cb) {
+    console.log('Retrieved fields for event ' + eid);
+    try{
+        var data = fbData.data;
+        var eventData = [
+            data[0].fql_result_set[0].end_time,
+            data[0].fql_result_set[0].attending_count,
+            data[0].fql_result_set[0].unsure_count,                    
+            (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.latitude : null,
+            (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.longitude : null,
+            data[0].fql_result_set[0].location,
+            data[0].fql_result_set[0].name,
+            data[0].fql_result_set[0].eid                    
+         ];
+         updateEventInfo(eventData);
+         cb();
+     } catch(err) {
+        cb(err);
+     }
+}
+
 function asyncRetrieve(eventRows, token) {
     async.eachLimit(eventRows, parallelAsyncHttpRequests, function(eventRow, cb) {
         retrieveEventInfo(eventRow.eid, token, function(fbData) {
-            console.log('Retrieved fields for event ' + eventRow.eid);
-            try{
-                var data = fbData.data;
-                var eventData = [
-                    data[0].fql_result_set[0].end_time,
-                    data[0].fql_result_set[0].attending_count,
-                    data[0].fql_result_set[0].unsure_count,                    
-                    (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.latitude : null,
-                    (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.longitude : null,
-                    data[0].fql_result_set[0].location,
-                    data[0].fql_result_set[0].name,
-                    data[0].fql_result_set[0].eid                    
-                 ];
-                 updateEventInfo(eventData);
-                 cb();
-             } catch(err) {
-                cb(err);
-             }
+            writeSingleUpdateToDb(fbData, eventRow.eid, cb);
         });
     }, function(err) {
         if (err) {
