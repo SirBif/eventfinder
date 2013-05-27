@@ -23,7 +23,7 @@ var maxEventsToUpdate = 5;
 var updateEventEveryXHours = 4;
 var eventLimitForFbQuery = 50;
 var dateRangeToDisplay = "1 day";
-var askParseANewTokenAfterXMinutes = 20;
+var askParseANewTokenAfterXMinutes = 30;
 var deleteEventsOlderThan = "24 hours";
 
 app.configure(function () {
@@ -110,6 +110,8 @@ function executeFbQuery_HeadOnly(query, token, cb) {
 app.get('/login', function (req, res, next) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
+	token = accessToken;
+	last_check = now();
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     console.log('Login from uid ' + uid);
