@@ -172,18 +172,39 @@ function doQuery(client, querySql, eid, start_time, cb) {
     });
 }
 
-function insertEventsIntoDb(data) {
+function asyncInsert(eventIds, token) {
     var querySql = "INSERT INTO events(eid, start_date) values($1, $2);";
+    async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, cb) {
+        pg.connect(process.env.DATABASE_URL, function(error, client, done) {
+            if(error) {
+                return;
+            }
+            doQuery(client, querySql, eventRow.eid, eventRow.start_time, done);
+        });
+    }, function(err) {
+        if (err) {
+            console.log('Insert problem:' +err);
+        }
+    });
+}
+
+function insertEventsIntoDb(data) {
+    getAToken(function(theToken) {
+        asyncInsert(data, theToken);
+    });
+}
+ /*   
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
             return;
         }
         var length = data.length;
+        
         for (var i = 0; i < length; i++) {
             doQuery(client, querySql, data[i].eid, data[i].start_time, done);
         }
     });
-}
+}*/
 
 function updateIntoDb(querySql, data) {
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
