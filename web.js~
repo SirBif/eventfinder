@@ -19,7 +19,7 @@ Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 var fetchListOfEventsEveryXHours = 6;
 var numberOfEventsToRetrieve = 100;
 var parallelAsyncHttpRequests = 5;
-var maxEventsToUpdate = 5;
+var maxEventsToUpdate = 200;
 var updateEventEveryXHours = 4;
 var eventLimitForFbQuery = 50;
 var dateRangeToDisplay = "1 day";
@@ -179,7 +179,7 @@ function asyncInsert(eventIds, token) {
             if(error) {
                 return;
             }
-            doQuery(client, querySql, eventRow.eid, eventRow.start_time, done);
+            doQuery(client, querySql, eventRow.eid, eventRow.start_time, function() {done(); cb();});
         });
     }, function(err) {
         if (err) {
