@@ -111,7 +111,7 @@ app.get('/login', function (req, res, next) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
 	token = accessToken;
-	last_check = now();
+	last_check = moment();
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     console.log('Login from uid ' + uid);
