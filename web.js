@@ -24,7 +24,7 @@ var updateEventEveryXHours = 4;
 var eventLimitForFbQuery = 50;
 var dateRangeToDisplay = "1 day";
 var askParseANewTokenAfterXMinutes = 30;
-var deleteEventsOlderThan = "24 hours";
+var deleteEventsOlderThan = "48 hours";
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
@@ -240,7 +240,7 @@ function retrieveEventsInBox(bottomRight, topLeft, cb) {
     var query = "";
     query += "SELECT name, start_date AS start_time, end_date AS end_time, attending_total AS people, location, latitude, longitude, eid ";
     query += "FROM events WHERE";
-    query += " start_date >= now()::date AND start_date < (now()::date + interval '" + dateRangeToDisplay + "')";
+    query += " start_date >= (now() - interval '24 hours') AND start_date < (now() + interval '" + dateRangeToDisplay + "')";
     query += " AND (end_date IS NULL OR end_date > now())";
     query += " AND last_update IS NOT NULL";
     query += " AND latitude > " + bottomRight.latitude;
@@ -354,7 +354,7 @@ function getAToken(cb) {
 }
 
 function doTheBigUpdate() {
-    extractFromDb("delete from events where start_date < now()::date - interval '"+ deleteEventsOlderThan +"'", function(nvm) {});
+    extractFromDb("delete from events where start_date < now() - interval '"+ deleteEventsOlderThan +"'", function(nvm) {});
     retrieveEventsToUpdate(function(eventRows) {
         if(eventRows.length > 0) {
             console.log('Number of events to update: ' + eventRows.length);
@@ -368,6 +368,6 @@ function doTheBigUpdate() {
 function retrieveEventsToUpdate(cb) {
     var limit = maxEventsToUpdate;
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '"+ updateEventEveryXHours +" hours')) or last_update IS NULL) and start_date >= now()::date ORDER BY last_update ASC LIMIT " + limit;
+    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '"+ updateEventEveryXHours +" hours')) or last_update IS NULL) and start_date >= now() ORDER BY last_update ASC LIMIT " + limit;
     extractFromDb(query, cb);
 };

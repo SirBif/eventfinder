@@ -193,18 +193,6 @@ function insertEventsIntoDb(data) {
         asyncInsert(data, theToken);
     });
 }
- /*   
-    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
-        if(error) {
-            return;
-        }
-        var length = data.length;
-        
-        for (var i = 0; i < length; i++) {
-            doQuery(client, querySql, data[i].eid, data[i].start_time, done);
-        }
-    });
-}*/
 
 function updateIntoDb(querySql, data) {
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
@@ -252,7 +240,7 @@ function retrieveEventsInBox(bottomRight, topLeft, cb) {
     var query = "";
     query += "SELECT name, start_date AS start_time, end_date AS end_time, attending_total AS people, location, latitude, longitude, eid ";
     query += "FROM events WHERE";
-    query += " start_date >= now()::date AND start_date < (now()::date + interval '" + dateRangeToDisplay + "')";
+    query += " start_date >= (now() - interval '24 hours') AND start_date < (now() + interval '" + dateRangeToDisplay + "')";
     query += " AND (end_date IS NULL OR end_date > now())";
     query += " AND last_update IS NOT NULL";
     query += " AND latitude > " + bottomRight.latitude;
@@ -366,7 +354,7 @@ function getAToken(cb) {
 }
 
 function doTheBigUpdate() {
-    extractFromDb("delete from events where start_date < now()::date - interval '"+ deleteEventsOlderThan +"'", function(nvm) {});
+    extractFromDb("delete from events where start_date < now() - interval '"+ deleteEventsOlderThan +"'", function(nvm) {});
     retrieveEventsToUpdate(function(eventRows) {
         if(eventRows.length > 0) {
             console.log('Number of events to update: ' + eventRows.length);
