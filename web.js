@@ -23,7 +23,7 @@ var maxEventsToUpdate = 200;
 var updateEventEveryXHours = 4;
 var eventLimitForFbQuery = 50;
 var dateRangeToDisplay = "1 day";
-var askParseANewTokenAfterXMinutes = 20;
+var askParseANewTokenAfterXMinutes = 30;
 var deleteEventsOlderThan = "24 hours";
 
 app.configure(function () {
@@ -75,7 +75,7 @@ function executeFbQuery(query, token, cb) {
                 console.log('Data Retrieved');
                 cb(theData);
 	        } else {
-	            console.log('FB query ended with error: '+theData);   
+	            console.log('FB query ended with error: '+ JSON.stringify(theData));   
 	        }
         });
     });
@@ -110,6 +110,8 @@ function executeFbQuery_HeadOnly(query, token, cb) {
 app.get('/login', function (req, res, next) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
+	token = accessToken;
+	last_check = moment();
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     token = accessToken;
@@ -380,6 +382,6 @@ function doTheBigUpdate() {
 function retrieveEventsToUpdate(cb) {
     var limit = maxEventsToUpdate;
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '"+ updateEventEveryXHours +" hours')) or last_update IS NULL) and start_date > now() ORDER BY last_update ASC LIMIT " + limit;
+    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '"+ updateEventEveryXHours +" hours')) or last_update IS NULL) and start_date >= now()::date ORDER BY last_update ASC LIMIT " + limit;
     extractFromDb(query, cb);
 };
