@@ -110,8 +110,6 @@ function executeFbQuery_HeadOnly(query, token, cb) {
 app.get('/login', function (req, res, next) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
-	token = accessToken;
-	last_check = moment();
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     token = accessToken;
@@ -195,18 +193,6 @@ function insertEventsIntoDb(data) {
         asyncInsert(data, theToken);
     });
 }
- /*   
-    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
-        if(error) {
-            return;
-        }
-        var length = data.length;
-        
-        for (var i = 0; i < length; i++) {
-            doQuery(client, querySql, data[i].eid, data[i].start_time, done);
-        }
-    });
-}*/
 
 function updateIntoDb(querySql, data) {
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
