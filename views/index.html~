@@ -19,6 +19,11 @@
         <ol id="list"></ol> 
     </nav>
 </div>
+<select id="whenCombo">
+  <option value="Today">Today</option>
+  <option value="Tomorrow">Tomorrow</option>
+  <option value="Weekend">Weekend</option>
+</select>
 <div id="mapContainer"></div>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="js/jhere.min.js"></script>

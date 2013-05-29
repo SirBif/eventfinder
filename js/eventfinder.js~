@@ -32,23 +32,35 @@ window.fbAsyncInit = function() {
 	ref.parentNode.insertBefore(js, ref);
 }(document));
 
-var activeCount = 0;
 function updateMarkers() {
-    activeCount++;
-    if(activeCount == 1) {
-        var properties = $('#mapContainer').jHERE();
-        var bottomRight = properties.bbox.bottomRight;
-        var topLeft = properties.bbox.topLeft;
-        $('#list').empty();
-        var requestString = "/retrieve?";
-        requestString += "bottomRightLat=" + bottomRight.latitude;
-        requestString += "&bottomRightLon=" + bottomRight.longitude;
-        requestString += "&topLeftLat=" + topLeft.latitude;
-        requestString += "&topLeftLon=" + topLeft.longitude;
-        requestString += "&time=" + moment().startOf('day').format();
-        $.get(requestString, {}).then(function(resultsJson) {printResults(resultsJson);});
+    var properties = $('#mapContainer').jHERE();
+    var combo = document.getElementById("whenCombo");
+    var whenSelection = combo.options[combo.selectedIndex].text;
+    var startDate;
+    var endDate;
+    if(whenSelection == "Tomorrow") {
+        startDate = moment().startOf('day').add('days', 1);
+        endDate = moment().startOf('day').add('days', 1).add('days', 1);
+    } else if (whenSelection == "Weekend") {
+        startDate = moment().day(5);
+        endDate = moment().day(-5).startOf('day').add('days', 7+3);
+    } else {
+        startDate = moment().startOf('day');
+        endDate = moment().startOf('day').add('days', 1);
     }
-    activeCount--;
+    var bottomRight = properties.bbox.bottomRight;
+    var topLeft = properties.bbox.topLeft;
+    var requestString = "/retrieve?";
+    requestString += "bottomRightLat=" + bottomRight.latitude;
+    requestString += "&bottomRightLon=" + bottomRight.longitude;
+    requestString += "&topLeftLat=" + topLeft.latitude;
+    requestString += "&topLeftLon=" + topLeft.longitude;
+    requestString += "&start=" + startDate.format();
+    requestString += "&end=" + endDate.format();
+    $.get(requestString, {}).then(function(resultsJson) {
+        printResults(resultsJson);
+    });
+    
 }
 
 var lastRefresh = moment();
@@ -69,9 +81,7 @@ function handleLogin() {
               source: function() { return $('#navigation').children();}
             });
             $('#mapContainer').jHERE('originalMap', function(map, here) {
-                map.addListener("mapviewchangeend", function (obj, key, newValue, oldValue) {
-                    updateMarkers();  
-                }, false);
+                map.addListener("mapviewchangeend", function() {updateMarkers();}, false);
                 //we load the markers for the 1st time
                 updateMarkers();
             });
@@ -83,8 +93,8 @@ function handleLogin() {
 function getContent(entry) {
     var result = '<table>';
     result += '<tr><td><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a></td></tr>';
-    result += "<tr><td>Start: " + moment(entry.start_time).calendar() + '</td></tr>';
-    result += (entry.end_time) ? "<tr><td>End: " + moment(entry.end_time).calendar() + '</td></tr>' : "";
+    result += "<tr><td>Start: " + moment(entry.start_time).format('LLL') + '</td></tr>';
+    result += (entry.end_time) ? "<tr><td>End: " + moment(entry.end_time).format('LLL') + '</td></tr>' : "";
     result += "<tr><td>Location: " + entry.location + '</td></tr>';
     result += "<tr><td>Going: " + entry.people + '</td></tr>';
     result += '</table>';
@@ -95,11 +105,12 @@ function printResults(results) {
 	if(results == undefined) {			
         // stuff
 	} else {
-	  $('#mapContainer').jHERE('nomarkers');
-      var i = 1;
-		results.forEach(function(entry) {
-		    var positionArray = [parseFloat(entry.latitude), parseFloat(entry.longitude)];			 	
-			$('#mapContainer').jHERE('marker', positionArray, {
+        $('#mapContainer').jHERE('nomarkers');
+        $('#list').empty();
+        var i = 1;
+        results.forEach(function(entry) {
+            var positionArray = [parseFloat(entry.latitude), parseFloat(entry.longitude)];			 	
+	        $('#mapContainer').jHERE('marker', positionArray, {
             	text: i,
             	mouseenter: function(event) {
             	    $('#mapContainer').jHERE(

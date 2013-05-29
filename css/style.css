@@ -43,3 +43,9 @@ li {
     top : 0px;
     right: 0px;
 }
+#whenCombo {
+    position: fixed;
+    z-index: 3;
+    top : 40px;
+    right: 5px;
+}
