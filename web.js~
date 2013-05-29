@@ -251,8 +251,9 @@ app.get('/retrieve', function (req, res, next) {
     var bottomRightLon = req.query["bottomRightLon"];
     var topLeftLat = req.query["topLeftLat"];
     var topLeftLon = req.query["topLeftLon"];
-    var start_time = req.query["time"];
-    retrieveEventsInBox({'latitude':bottomRightLat, 'longitude':bottomRightLon} , {'latitude':topLeftLat,'longitude':topLeftLon}, start_time, function(rows) {
+    var start_time = req.query["start"];
+    var end_time = req.query["end"];
+    retrieveEventsInBox({'latitude':bottomRightLat, 'longitude':bottomRightLon} , {'latitude':topLeftLat,'longitude':topLeftLon}, start_time, end_time, function(rows) {
         res.json(rows);
     });
 });
