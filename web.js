@@ -251,25 +251,49 @@ app.get('/retrieve', function (req, res, next) {
     var bottomRightLon = req.query["bottomRightLon"];
     var topLeftLat = req.query["topLeftLat"];
     var topLeftLon = req.query["topLeftLon"];
-    retrieveEventsInBox({'latitude':bottomRightLat, 'longitude':bottomRightLon} , {'latitude':topLeftLat,'longitude':topLeftLon}, function(rows) {
+    var start_time = req.query["time"];
+    retrieveEventsInBox({'latitude':bottomRightLat, 'longitude':bottomRightLon} , {'latitude':topLeftLat,'longitude':topLeftLon}, start_time, function(rows) {
         res.json(rows);
     });
 });
 
-function retrieveEventsInBox(bottomRight, topLeft, cb) {
+function retrieveEventsInBox(bottomRight, topLeft, start, cb) {
     var query = "";
+    
     query += "SELECT name, start_date AS start_time, end_date AS end_time, attending_total AS people, location, latitude, longitude, eid ";
     query += "FROM events WHERE";
-    query += " start_date >= (now() - interval '24 hours') AND start_date < (now() + interval '" + dateRangeToDisplay + "')";
-    query += " AND (end_date IS NULL OR end_date > now())";
+    query += " ( (start_date >= $5 AND start_date < $5 + interval '24 hours')";
+    query += " OR (start_date < $5 AND end_date > now()) )";
     query += " AND last_update IS NOT NULL";
     //query += " AND earth_box(ll_to_earth("+lat+", "+lon+"), 60000) @> ll_to_earth(events.latitude, events.longitude)";
-    query += " AND latitude > " + bottomRight.latitude;
-    query += " AND latitude < " + topLeft.latitude;
-    query += " AND longitude < " + bottomRight.longitude;
-    query += " AND longitude > " + topLeft.longitude;
-    query += " ORDER BY people DESC LIMIT " + numberOfEventsToRetrieve;
-    executeQuery(query, cb);
+    //query += " AND latitude > " + bottomRight.latitude + " AND latitude < " + topLeft.latitude;
+    query += " AND latitude > $1 AND latitude < $2";
+    //query += " AND longitude < " + bottomRight.longitude + " AND longitude > " + topLeft.longitude;
+    query += " AND longitude < $3 AND longitude > $4";
+    query += " ORDER BY people DESC LIMIT $6"// + numberOfEventsToRetrieve;*/
+    executePS('retrieveEventsPs', query, [bottomRight.latitude, topLeft.latitude, bottomRight.longitude, topLeft.longitude, moment(start), numberOfEventsToRetrieve], cb);
+}
+
+function executePS(name, queryString, params, cb) {
+//{name:"emp_name", text:"select name from emp where emp_id=$1", values:[123]}
+    var results = [];
+    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
+        if(error) {
+            console.log(error);
+            return;
+        }
+        var query = client.query({ name: name, text: queryString, values: params });
+        query.on('error', function(error) {
+            console.log(error);
+        });
+        query.on('row', function(row) {
+            results.push(row);
+        });
+        query.on('end', function(result) {
+            done();
+            cb(results); 
+        });
+    });
 }
 
 function executeQuery(queryString, cb) {
