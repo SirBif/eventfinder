@@ -45,6 +45,7 @@ function updateMarkers() {
         requestString += "&bottomRightLon=" + bottomRight.longitude;
         requestString += "&topLeftLat=" + topLeft.latitude;
         requestString += "&topLeftLon=" + topLeft.longitude;
+        requestString += "&time=" + moment().startOf('day').format();
         $.get(requestString, {}).then(function(resultsJson) {printResults(resultsJson);});
     }
     activeCount--;
