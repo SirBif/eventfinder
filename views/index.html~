@@ -16,7 +16,7 @@
 <!--present a graphical Login button that triggers the FB.login() function when clicked.-->
 <div id="navigation">
     <nav class="nav">
-        <ul id="list"></ul> 
+        <ol id="list"><li></li></ol> 
     </nav>
 </div>
 <select id="whenCombo" onchange="updateMarkers()">

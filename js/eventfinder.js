@@ -108,7 +108,7 @@ function printResults(results) {
         $('#mapContainer').jHERE('nomarkers');
         $('#list').empty();
         var i = 1;
-        results.forEach(function(entry) {
+        results.reverse().forEach(function(entry) {
             var positionArray = [parseFloat(entry.latitude), parseFloat(entry.longitude)];			 	
 	        $('#mapContainer').jHERE('marker', positionArray, {
             	text: i,
@@ -127,7 +127,7 @@ function printResults(results) {
             	    );
                 }
             });
-            $('#list').append('<li id="item_'+i+'"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ') <span class="centerLink" onclick="centerMap('+entry.latitude+','+entry.longitude+')">[Center Map]</span></li>');
+            $('#list').prepend('<li id="item_'+i+'"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ') <span class="centerLink" onclick="centerMap('+entry.latitude+','+entry.longitude+')">[Center Map]</span></li>');
             i++;
         });
 	}
