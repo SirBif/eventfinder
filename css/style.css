@@ -92,3 +92,7 @@ li {
 a:link, a:visited, a:hover, a:active {
     color: #000000;
 }
+.centerLink {
+    text-decoration: underline;
+    cursor: pointer
+}

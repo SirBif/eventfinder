@@ -127,8 +127,13 @@ function printResults(results) {
             	    );
                 }
             });
-            $('#list').append('<li id="item_' +i+ '"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ')</li>');
+            $('#list').append('<li id="item_'+i+'"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ') <span class="centerLink" onclick="centerMap('+entry.latitude+','+entry.longitude+')">[Center Map]</span></li>');
             i++;
         });
 	}
+}
+
+function centerMap(lat, lon) {
+    $('#mapContainer').jHERE('center', [lat, lon]).jHERE('zoom', 11);
+    
 }

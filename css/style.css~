@@ -80,7 +80,7 @@ li {
     text-align: center;
     text-decoration: none;
     font: 14px/100% Arial, Helvetica, sans-serif;
-    padding: .5em 1em .55em;
+    padding: .5em .7em .55em;
     text-shadow: 0 1px 1px rgba(0,0,0,.3);
     -webkit-border-radius: .5em;
     -moz-border-radius: .5em;
@@ -91,4 +91,7 @@ li {
 }
 a:link, a:visited, a:hover, a:active {
     color: #000000;
+}
+.centerLink {
+    text-decoration: underline;
 }
