@@ -32,6 +32,13 @@ window.fbAsyncInit = function() {
 	ref.parentNode.insertBefore(js, ref);
 }(document));
 
+var myLocation;
+(function() {
+    $.get("http://freegeoip.net/json/", {}).then(function(resultsJson) {
+        myLocation = [resultsJson.latitude, resultsJson.longitude];
+    });
+}());
+
 function updateMarkers() {
     var properties = $('#mapContainer').jHERE();
     var combo = document.getElementById("whenCombo");
@@ -69,9 +76,12 @@ function handleLogin() {
 		if (response.status === 'connected') {
 			var uid = response.authResponse.userID;
 			var accessToken = response.authResponse.accessToken;
+			if(myLocation == undefined) {
+			    myLocation = [44.843699,11.619072];
+			}
 		    $('#mapContainer').jHERE({
                 enable: ['behavior', 'positioning', 'zoombar', 'scalebar'],
-                center: [44.843699,11.619072],
+                center: myLocation,
                 zoom: 9,
                 appId: '2555Yk0ixeYKXQe2OrXM',
                 authToken: 'E5I47YZhcJA7W9P6eIebEA'
