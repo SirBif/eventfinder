@@ -123,24 +123,26 @@ function printResults(results) {
 	        $('#mapContainer').jHERE('marker', positionArray, {
             	text: i,
             	mouseenter: function(event) {
-            	    $('#mapContainer').jHERE(
-            	        'bubble',
-            	        positionArray,
-            	        {closable: true, content: getContent(entry)}
-            	    );
+            	    showBubble(positionArray, getContent(entry));
                 },
                 click: function(event) {
-            	    $('#mapContainer').jHERE(
-            	        'bubble',
-            	        positionArray,
-            	        {closable: true, content: getContent(entry)}
-            	    );
+            	    showBubble(positionArray, getContent(entry));
                 }
             });
-            $('#list').prepend('<li id="item_'+i+'"><a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ') <span class="centerLink" onclick="centerMap('+entry.latitude+','+entry.longitude+')">[Center Map]</span></li>');
+            var listItem = document.createElement('li');
+            listItem.innerHTML = '<a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ') <span class="centerLink" onclick="centerMap('+entry.latitude+','+entry.longitude+')">[Center Map]</span>';
+            $('#list').prepend(listItem);
             i--;
         });
 	}
+}
+
+function showBubble(positionArray, myContent) {
+    $('#mapContainer').jHERE(
+        'bubble',
+        positionArray,
+        {closable: true, content: myContent}
+    );
 }
 
 function centerMap(lat, lon) {

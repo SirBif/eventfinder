@@ -17,14 +17,12 @@ var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var fetchListOfEventsEveryXHours = 6;
-var numberOfEventsToRetrieve = 100;
+var numberOfEventsToRetrieve = 50;
 var parallelAsyncHttpRequests = 5;
 var maxEventsToUpdate = 200;
 var updateEventEveryXHours = 4;
-var eventLimitForFbQuery = 50;
-var dateRangeToDisplay = "1 day";
+var eventLimitForFbQuery = 100;
 var askParseANewTokenAfterXMinutes = 30;
-var deleteEventsOlderThan = "48 hours";
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
@@ -157,7 +155,12 @@ function asyncInsert(eventIds, token, cb) {
             if(error) {
                 return;
             }
-            doQuery(client, querySql, eventRow.eid, eventRow.start_time, done, cb);
+            if(eventRow.eid != undefined) {
+                doQuery(client, querySql, eventRow.eid, eventRow.start_time, done, cb);
+            } else {
+                done();
+                db();
+            }
         });
     }, function(err) {
         if (err) {
@@ -276,7 +279,6 @@ function retrieveEventsInBox(bottomRight, topLeft, start, end, cb) {
 }
 
 function executePS(name, queryString, params, cb) {
-//{name:"emp_name", text:"select name from emp where emp_id=$1", values:[123]}
     var results = [];
     pg.connect(process.env.DATABASE_URL, function(error, client, done) {
         if(error) {
@@ -325,7 +327,7 @@ app.get('/update', function (req, res) {
 });
 
 function doTheBigUpdate() {
-    executeQuery("delete from events where start_date < now() - interval '"+ deleteEventsOlderThan +"'", function(nvm) {
+    executeQuery("delete from events where (start_date < now() - interval '24 hours' AND end_date IS NULL) OR (end_date < now())", function(nvm) {
         retrieveEventsToUpdate(function(eventRows) {
             if(eventRows.length > 0) {
                 console.log('Number of events to update: ' + eventRows.length);
