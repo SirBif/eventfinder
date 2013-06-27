@@ -327,12 +327,12 @@ function executeQuery(queryString, cb) {
         });
     });
 };
-/*
-app.get('/disabledUpdate', function (req, res) {
+
+app.get('/update', function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     doTheBigUpdate();
-});*/
+});
 
 function doTheBigUpdate() {
     executeQuery("delete from events where (start_date < now() - interval '24 hours' AND end_date IS NULL) OR (end_date < now())", function(nvm) {
@@ -473,6 +473,17 @@ function getEvents(place, getEventsCb) {
     myreq.end();
 }
 
+function checkPlace(place) {
+    executePS("checkPlace", "select last_update from places where id = $1;", [place.id], function(results) {
+        if(results.length > 0) {
+            // TODO check if it has been updated recently enough
+        } else {
+           placesQueue.push(currPlace);  
+           executePS("addPlace", "INSERT INTO places(id, name, last_update) values($1, $2, $3);", [currPlace.id, currPlace.name, moment()], function() {});
+        }
+    });
+}
+
 function getNext(path, completeCb) {
     var options = {
 		hostname: 'graph.facebook.com',
@@ -507,15 +518,7 @@ function getNext(path, completeCb) {
                     for(var i=0;i<l;i++){
                         place = theArray[i];
                         if(place.id != undefined) {
-                            executePS("checkPlace", "select last_update from places where id = $1;", [place.id], function(results) {
-                                if(results.length > 0) {
-                                    var currPlace = results[0];
-                                    // TODO check if it has been updated recently enough
-                                } else {
-                                   placesQueue.push(place);  
-                                   executePS("addPlace", "INSERT INTO places(id, name, last_update) values($1, $2, $3);", [place.id, place.name, moment()], function() {});
-                                }
-                            });
+                            checkPlace(place);
                         }  
                     }
                 }
@@ -553,7 +556,7 @@ function babamUpdate() {
     var locations = [
         ["Bologna", 44.496995,11.341957],
         ["Ferrara", 44.843699,11.619072],
-        ["Milano", 45.468799,9.16867],updateIntoDb
+        ["Milano", 45.468799,9.16867],
         ["Roma", 41.899211,12.509093],
         ["Padova", 45.407128,11.887153],
         ["Venezia", 45.44002,12.317707],
