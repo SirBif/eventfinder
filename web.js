@@ -477,8 +477,9 @@ function getEvents(place, getEventsCb) {
 function checkPlace(place) {
     executePS("checkPlace", "select last_update from places where id = $1;", [place.id], function(results) {
         if(results.length > 0) {
+            var dbResult = results[0];
             var beforeThisItsTooOld = moment().subtract('hours', checkPlaceEveryXHours);
-            if(results.last_update < beforeThisItsTooOld) {
+            if(dbResult.last_update < beforeThisItsTooOld) {
                 placesQueue.push(place);
                 executePS("updatePlace", "UPDATE places SET last_update = $2 WHERE id = $1;", [place.id, moment()], function() {});
             }
