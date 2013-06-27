@@ -41,6 +41,7 @@ var myLocation;
 
 function updateMarkers() {
     var properties = $('#mapContainer').jHERE();
+    
     var combo = document.getElementById("whenCombo");
     var whenSelection = combo.options[combo.selectedIndex].text;
     var startDate;
@@ -57,7 +58,7 @@ function updateMarkers() {
     }
     var bottomRight = properties.bbox.bottomRight;
     var topLeft = properties.bbox.topLeft;
-    var requestString = "/retrieve?";
+    var requestString = "/retrieve2?";
     requestString += "bottomRightLat=" + bottomRight.latitude;
     requestString += "&bottomRightLon=" + bottomRight.longitude;
     requestString += "&topLeftLat=" + topLeft.latitude;
@@ -70,7 +71,6 @@ function updateMarkers() {
     
 }
 
-var lastRefresh = moment();
 function handleLogin() {
 	FB.getLoginStatus(function(response) {
 		if (response.status === 'connected') {
@@ -131,7 +131,6 @@ function printResults(results) {
             });
             var listItem = document.createElement('li');
             listItem.innerHTML = '<a href="http://www.facebook.com/' + entry.eid +'" target="_blank">' + entry.name + '</a>\n(Going: ' + entry.people + ') <span class="centerLink" onclick="centerMap('+entry.latitude+','+entry.longitude+')">[Center Map]</span>';
-            listItem.addEventListener("mouseover", showBubble(positionArray, getContent(entry)), false);
             $('#list').prepend(listItem);
             i--;
         });

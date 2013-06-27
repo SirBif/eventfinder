@@ -5,6 +5,7 @@ var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
 var pg = require('pg');
+https.globalAgent.maxSockets = 80;
 /*
 //var fs = require('fs');
 var serverOptions = {
@@ -45,6 +46,10 @@ app.listen(port, function() {
 app.all('/', function (req, res, next) {
 	res.render('index.html', {layout: false});
 });
+/*
+app.all('/login.html', function (req, res, next) {
+	res.render('login.html', {layout: false});
+});*/
 
 var token;
 var last_check;
@@ -54,8 +59,11 @@ app.get('/login', function (req, res, next) {
     var accessToken = req.query["token"];
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
-    token = accessToken;
-    last_check = moment();
+    if(accessToken != token) {
+        console.log('NEW TOKEN!!');
+        token = accessToken;
+        last_check = moment();
+    }
     console.log('Login from uid ' + uid);
     fetchUserInfo(uid, function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
 });
@@ -97,7 +105,7 @@ function doAnUpdate(token, cb) {
 
 function executeFbQuery(query, token, cb) {
 	var options = {
-		host: 'graph.facebook.com',
+		hostname: 'graph.facebook.com',
 		port: 443,
 		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 		method: 'GET',
@@ -178,7 +186,7 @@ function doQuery(client, querySql, eid, start_time, done, cb) {
         }
         done();
         cb();
-        console.log(error);   
+        console.log(error);
     });
     query.on('end', function(result) {
         done();
@@ -186,7 +194,7 @@ function doQuery(client, querySql, eid, start_time, done, cb) {
             console.log('Adding event ' + eid);
             getAToken(function(token) {
                 retrieveEventInfo(eid, token, function(fbData) {
-                    writeSingleUpdateToDb(fbData, eid, cb());
+                    writeSingleUpdateToDb(fbData, eid, cb);
                 });
             });
         }
@@ -389,4 +397,175 @@ function executeFbQuery_HeadOnly(query, token, cb) {
 
 function getNumberOfElements(size) {
    return (size - 10) / 12;
+}
+
+app.get('/babam', function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end();
+    babamUpdate();
+});
+
+app.get('/updateToken', function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end();
+    var newToken = req.query["token"];
+    if(newToken != token) {
+        console.log('NEW TOKEN!!');
+        token = newToken;
+        last_check = moment();
+    }
+});
+
+function babamInsert(event, cb) {
+    var querySql = "INSERT INTO events(eid, start_date) values($1, $2);";
+    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
+        if(error) {
+            return;
+        }
+        if(event.id != undefined) {
+            doQuery(client, querySql, event.id, event.start_time, done, cb);
+        } else {
+            done();
+            cb();
+        }
+    });
+}
+
+function getEvents(place, getEventsCb) {
+    var theToken = token;
+    var path = "/"+place.id+"/events?fields=id,start_time&access_token="+theToken;
+    var options = {
+		hostname: 'graph.facebook.com',
+		port: 443,
+		agent: false,
+		path: path
+	};
+	console.log("Places: "+ placesQueue.length());
+    var myreq = https.request(options, function (result) {
+        var data = "";
+        result.on('data', function (d) {
+	        data+=d;
+        });
+        result.on('error', function (err) {
+            console.log('Error: ' + err);
+            placesQueue.push(path);  
+            getEventsCb();
+            return;
+        });
+        result.on('end', function() {
+            var json = JSON.parse(data);
+            if(json.data) {
+                async.forEach(json.data, function(entry, cb) {
+                    babamInsert(entry, cb);
+                    console.log(entry.id + " " + place.name);
+                }, function(err) {
+                    getEventsCb();
+                });
+            } else {
+                getEventsCb();
+            }
+        });
+    })
+    myreq.on('error', function(e) {
+        console.log(e);
+        getEventsCb();
+    });
+    myreq.end();
+}
+
+function getNext(path, completeCb) {
+    var options = {
+		hostname: 'graph.facebook.com',
+		port: 443,
+		agent: false,
+		path: path
+	};
+	console.log("Locations: "+ locationsQueue.length());
+    var myreq = https.request(options, function (result) {
+        var data = "";
+        result.on('data', function (d) {
+            data+=d;
+        });
+        result.on('error', function (err) {
+            console.log('Error: ' + err);
+            locationsQueue.push(path);
+            completeCb();
+            return;
+        });
+        result.on('end', function() {
+            var json = JSON.parse(data);
+            var last = false;
+            if(json.error == undefined) {
+                if(json.paging && json.paging.next) {
+                    var array = json.paging.next.split("/");
+	                locationsQueue.push("/"+array[3]);
+                }
+                if(json.data) {
+                    var theArray = json.data;
+                    var l = theArray.length;
+                    var place;
+                    for(var i=0;i<l;i++){
+                        place = theArray[i];
+                        if(place.id != undefined) {
+                            executePS("checkPlace", "select last_update from places where id = $1;", [place.id], function(results) {
+                                if(results.length > 0) {
+                                    var currPlace = results[0];
+                                    // TODO check if it has been updated recently enough
+                                } else {
+                                   placesQueue.push(place);  
+                                   executePS("addPlace", "INSERT INTO places(id, name, last_update) values($1, $2, $3);", [place.id, place.name, moment()], function() {});
+                                }
+                            });
+                        }  
+                    }
+                }
+                completeCb();
+	        } else {
+	            console.log('Request ended with error: '+ JSON.stringify(json));
+	            completeCb();   
+	        }
+        });
+    });
+    myreq.on('error', function(e) {
+        console.log(e);
+        completeCb();
+    });
+    myreq.end();
+}
+
+var placesQueue = async.queue(function(venue, callback) {
+    getEvents(venue, callback);
+}, 30);
+placesQueue.drain = function() {
+    console.log('places drain');
+};
+
+var locationsQueue = async.queue(function(thePath, callback) {
+    getNext(thePath, callback);
+}, 5);
+locationsQueue.drain = function() {
+    //var newConcurrency = 30;
+    //console.log('Location drain. Setting placeQueue concurrency to ' + newConcurrency);
+    //placesQueue.concurrency = newConcurrency;
+};
+
+function babamUpdate() {
+    var locations = [
+        ["Bologna", 44.496995,11.341957],
+        ["Ferrara", 44.843699,11.619072],
+        ["Milano", 45.468799,9.16867],updateIntoDb
+        ["Roma", 41.899211,12.509093],
+        ["Padova", 45.407128,11.887153],
+        ["Venezia", 45.44002,12.317707],
+        ["Rimini", 44.061193,12.555946]
+    ];
+    async.eachLimit(locations, 5, function(myLocation, cb) {
+        var theToken = token;
+        console.log(myLocation[0]);
+        var thePath = "/search?type=place&center="+myLocation[1]+","+myLocation[2]+"&distance=50000&fields=id,location,name&access_token=" + theToken;
+        locationsQueue.push(thePath);
+        cb();
+    }, function(err) {
+        
+    });
 }

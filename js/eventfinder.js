@@ -41,6 +41,7 @@ var myLocation;
 
 function updateMarkers() {
     var properties = $('#mapContainer').jHERE();
+    
     var combo = document.getElementById("whenCombo");
     var whenSelection = combo.options[combo.selectedIndex].text;
     var startDate;
@@ -70,7 +71,6 @@ function updateMarkers() {
     
 }
 
-var lastRefresh = moment();
 function handleLogin() {
 	FB.getLoginStatus(function(response) {
 		if (response.status === 'connected') {
