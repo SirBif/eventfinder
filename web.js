@@ -432,6 +432,12 @@ function babamInsert(event, cb) {
     });
 }
 
+function updatePlace(place, cb) {
+    getEvents(place, function() {
+        executePS("updatePlace", "UPDATE places SET last_update = $2 where id = $1;", [place.id, moment()], function() { cb();});
+    });
+}
+
 function getEvents(place, getEventsCb) {
     var theToken = token;
     var path = "/"+place.id+"/events?fields=id,start_time&access_token="+theToken;
@@ -457,8 +463,8 @@ function getEvents(place, getEventsCb) {
             var json = JSON.parse(data);
             if(json.data) {
                 async.forEach(json.data, function(entry, cb) {
-                    babamInsert(entry, cb);
                     console.log(entry.id + " " + place.name);
+                    babamInsert(entry, cb);
                 }, function(err) {
                     getEventsCb();
                 });
@@ -481,11 +487,9 @@ function checkPlace(place) {
             var beforeThisItsTooOld = moment().subtract('hours', checkPlaceEveryXHours);
             if(dbResult.last_update < beforeThisItsTooOld) {
                 placesQueue.push(place);
-                executePS("updatePlace", "UPDATE places SET last_update = $2 WHERE id = $1;", [place.id, moment()], function() {});
             }
         } else {
-           placesQueue.push(place);  
-           executePS("addPlace", "INSERT INTO places(id, name, last_update) values($1, $2, $3);", [place.id, place.name, moment()], function() {});
+           executePS("addPlace", "INSERT INTO places(id, name) values($1, $2);", [place.id, place.name], function() {placesQueue.push(place);});
         }
     });
 }
@@ -543,7 +547,7 @@ function getNext(path, completeCb) {
 }
 
 var placesQueue = async.queue(function(venue, callback) {
-    getEvents(venue, callback);
+    updatePlace(venue, callback);
 }, 30);
 placesQueue.drain = function() {
     console.log('places drain');

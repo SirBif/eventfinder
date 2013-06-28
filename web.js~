@@ -22,7 +22,7 @@ var numberOfEventsToRetrieve = 50;
 var parallelAsyncHttpRequests = 5;
 var maxEventsToUpdate = 200;
 var updateEventEveryXHours = 4;
-var checkPlaceEveryXHours = 48;
+var checkPlaceEveryXHours = 4;
 var eventLimitForFbQuery = 100;
 var askParseANewTokenAfterXMinutes = 30;
 
@@ -432,6 +432,12 @@ function babamInsert(event, cb) {
     });
 }
 
+function updatePlace(place, cb) {
+    getEvents(place, function() {
+        executePS("updatePlace", "UPDATE places SET last_update = $2 where id = $1;", [place.id, moment()], function() { cb();});
+    });
+}
+
 function getEvents(place, getEventsCb) {
     var theToken = token;
     var path = "/"+place.id+"/events?fields=id,start_time&access_token="+theToken;
@@ -457,8 +463,8 @@ function getEvents(place, getEventsCb) {
             var json = JSON.parse(data);
             if(json.data) {
                 async.forEach(json.data, function(entry, cb) {
-                    babamInsert(entry, cb);
                     console.log(entry.id + " " + place.name);
+                    babamInsert(entry, cb);
                 }, function(err) {
                     getEventsCb();
                 });
@@ -477,14 +483,13 @@ function getEvents(place, getEventsCb) {
 function checkPlace(place) {
     executePS("checkPlace", "select last_update from places where id = $1;", [place.id], function(results) {
         if(results.length > 0) {
+            var dbResult = results[0];
             var beforeThisItsTooOld = moment().subtract('hours', checkPlaceEveryXHours);
-            if(results.last_update < beforeThisItsTooOld) {
+            if(dbResult.last_update < beforeThisItsTooOld) {
                 placesQueue.push(place);
-                executePS("updatePlace", "UPDATE places SET last_update = $2 WHERE id = $1;", [place.id, moment()], function() {});
             }
         } else {
-           placesQueue.push(place);  
-           executePS("addPlace", "INSERT INTO places(id, name, last_update) values($1, $2, $3);", [place.id, place.name, moment()], function() {});
+           executePS("addPlace", "INSERT INTO places(id, name) values($1, $2);", [place.id, place.name], function() {placesQueue.push(place);});
         }
     });
 }
@@ -542,7 +547,7 @@ function getNext(path, completeCb) {
 }
 
 var placesQueue = async.queue(function(venue, callback) {
-    getEvents(venue, callback);
+    updatePlace(venue, callback);
 }, 30);
 placesQueue.drain = function() {
     console.log('places drain');
