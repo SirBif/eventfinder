@@ -577,7 +577,7 @@ locationsQueue.drain = function() {
 function babamUpdate() {
     pool.getConnection(function(err, connection) {
         if(err){ console.log(err); } else {
-            connection.query("SELECT id, name, lat, lng FROM comuni WHERE ((last_update < '"+moment().subtract('hours', 48).format()+"') OR (last_update IS NULL)) LIMIT 10;", function(err, rows, fields) {
+            connection.query("SELECT id, name, lat, lng FROM comuni WHERE ((last_update < '"+moment().subtract('hours', 48).format()+"') OR (last_update IS NULL)) LIMIT 10000;", function(err, rows, fields) {
                 connection.end();
                 if (err) {
                     console.log(err);
