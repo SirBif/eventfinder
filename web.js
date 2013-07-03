@@ -5,6 +5,10 @@ var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
 var pg = require('pg');
+var mysql = require('mysql');
+var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
+
+
 https.globalAgent.maxSockets = 80;
 /*
 //var fs = require('fs');
@@ -25,6 +29,7 @@ var updateEventEveryXHours = 4;
 var checkPlaceEveryXHours = 48;
 var eventLimitForFbQuery = 100;
 var askParseANewTokenAfterXMinutes = 30;
+var locationDistanceRadius = 10000;
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
@@ -563,22 +568,24 @@ locationsQueue.drain = function() {
 };
 
 function babamUpdate() {
-    var locations = [
-        ["Bologna", 44.496995,11.341957],
-        ["Ferrara", 44.843699,11.619072],
-        ["Milano", 45.468799,9.16867],
-        ["Roma", 41.899211,12.509093],
-        ["Padova", 45.407128,11.887153],
-        ["Venezia", 45.44002,12.317707],
-        ["Rimini", 44.061193,12.555946]
-    ];
-    async.eachLimit(locations, 5, function(myLocation, cb) {
-        var theToken = token;
-        console.log(myLocation[0]);
-        var thePath = "/search?type=place&center="+myLocation[1]+","+myLocation[2]+"&distance=50000&fields=id,location,name&access_token=" + theToken;
-        locationsQueue.push(thePath);
-        cb();
-    }, function(err) {
-        
+    pool.getConnection(function(err, connection) {
+        connection.query('SELECT name, lat, lng FROM comuni LIMIT 10;', function(err, rows, fields) {
+            if (err) {
+                throw err;
+            } else {
+                
+                async.eachLimit(rows, 5, function(myLocation, cb) {
+                    var theToken = token;
+                    console.log(myLocation['name']);
+                    var thePath = "/search?type=place&center="+myLocation['lat']+","+myLocation['lng']+"&distance="+locationDistanceRadius+"&fields=id,location,name&access_token=" + theToken;
+                    locationsQueue.push(thePath);
+                    cb();
+                }, function(err) {
+                    console.log('mysql error');
+                });
+            }
+        });
+
+        connection.end();
     });
 }
