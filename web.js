@@ -565,7 +565,7 @@ var placesQueue = async.queue(function(venue, callback) {
     updatePlace(venue, callback);
 }, 30);
 placesQueue.drain = function() {
-    console.log('places drain');
+    addLocations();
 };
 
 var locationsQueue = async.queue(function(thePath, callback) {
@@ -574,26 +574,28 @@ var locationsQueue = async.queue(function(thePath, callback) {
 locationsQueue.drain = function() {
 };
 
-function babamUpdate() {
+function addLocations() {
     pool.getConnection(function(err, connection) {
         if(err){ console.log(err); } else {
-            connection.query("SELECT id, name, lat, lng FROM comuni WHERE ((last_update < '"+moment().subtract('hours', 48).format()+"') OR (last_update IS NULL)) LIMIT 10000;", function(err, rows, fields) {
+            connection.query("SELECT id, name, lat, lng FROM comuni WHERE ((last_update < '"+moment().subtract('hours', 48).format()+"') OR (last_update IS NULL)) LIMIT 10;", function(err, rows, fields) {
                 connection.end();
                 if (err) {
                     console.log(err);
                 } else {                
                     async.eachLimit(rows, 5, function(myLocation, cb) {
                         var theToken = token;
-                        console.log(myLocation['name']);
-                        var thePath = "/search?type=place&center="+myLocation['lat']+","+myLocation['lng']+"&distance="+locationDistanceRadius+"&fields=id,location,name&access_token=" + theToken;
-                        locationsQueue.push(thePath);
-                        pool.getConnection(function(err, connection2) {
-                            connection2.query("UPDATE comuni SET last_update = '"+moment().format()+"' WHERE id = ?", [myLocation['id']],function(err, rows, fields) {
-                                connection2.end();
-                                cb();
+                        if(myLocation) {
+                            console.log(myLocation['name']);
+                            var thePath = "/search?type=place&center="+myLocation['lat']+","+myLocation['lng']+"&distance="+locationDistanceRadius+"&fields=id,location,name&access_token=" + theToken;
+                            locationsQueue.push(thePath);
+                            pool.getConnection(function(err, connection2) {
+                                connection2.query("UPDATE comuni SET last_update = '"+moment().format()+"' WHERE id = ?", [myLocation['id']],function(err, rows, fields) {
+                                    connection2.end();
+                                    cb();
+                                });
+                                //console.log('inner mysql connection closed');
                             });
-                            //console.log('inner mysql connection closed');
-                        });
+                         }
                     }, function(error) {
                         console.log(error);
                     });
@@ -602,4 +604,8 @@ function babamUpdate() {
             //console.log('outer mysql connection closed');
         }
     });
+}
+
+function babamUpdate() {
+    addLocations();
 }
