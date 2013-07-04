@@ -457,7 +457,9 @@ function getEvents(place, getEventsCb) {
 		agent: false,
 		path: path
 	};
-	console.log("Places: "+ placesQueue.length());
+	if(placesQueue.length()%100 == 0) {
+	    console.log("Places: "+ placesQueue.length());
+	}
     var myreq = https.request(options, function (result) {
         var data = "";
         result.on('data', function (d) {
@@ -584,7 +586,7 @@ function addLocations() {
                 } else {                
                     async.eachLimit(rows, 5, function(myLocation, cb) {
                         var theToken = token;
-                        if(myLocation) {
+                        if(myLocation['name']) {
                             console.log(myLocation['name']);
                             var thePath = "/search?type=place&center="+myLocation['lat']+","+myLocation['lng']+"&distance="+locationDistanceRadius+"&fields=id,location,name&access_token=" + theToken;
                             locationsQueue.push(thePath);

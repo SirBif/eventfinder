@@ -565,14 +565,13 @@ var placesQueue = async.queue(function(venue, callback) {
     updatePlace(venue, callback);
 }, 30);
 placesQueue.drain = function() {
-    console.log('places drain');
+    addLocations();
 };
 
 var locationsQueue = async.queue(function(thePath, callback) {
     getNext(thePath, callback);
 }, 5);
 locationsQueue.drain = function() {
-    addLocations();
 };
 
 function addLocations() {
@@ -585,7 +584,7 @@ function addLocations() {
                 } else {                
                     async.eachLimit(rows, 5, function(myLocation, cb) {
                         var theToken = token;
-                        if(myLocation) {
+                        if(myLocation['name']) {
                             console.log(myLocation['name']);
                             var thePath = "/search?type=place&center="+myLocation['lat']+","+myLocation['lng']+"&distance="+locationDistanceRadius+"&fields=id,location,name&access_token=" + theToken;
                             locationsQueue.push(thePath);
