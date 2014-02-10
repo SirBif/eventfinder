@@ -76,7 +76,7 @@ function fetchUserInfo(uid, cb) {
 
 function updateIfNeeded(userInfo, accessToken) {
 	if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
-		console.log('Updating user ' + user.get("uid"));
+		console.log('Updating user ' + userInfo.get("uid"));
 		doAnUpdate(accessToken, function() {
 		    userInfo.set("last_update", new Date());
 	        userInfo.save();
