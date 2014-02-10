@@ -88,7 +88,7 @@ function updateIfNeeded(userInfo, accessToken) {
 }
 
 function shouldIUpdate(last_update, minutes) {
-    if((last_update == undefined) || (last_update < moment().subtract('hours', 60 * minutes);)) {
+    if((last_update == undefined) || (last_update < moment().subtract('hours', 60 * minutes))) {
         return true;
     }
     return false;   
