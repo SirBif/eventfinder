@@ -1,10 +1,10 @@
 module.exports = {
-  FB_EVENTS_TO_UPDATE : query_FB_EVENTS_TO_UPDATE,
-  UPDATE_EVENT_INFO : query_UPDATE_EVENT_INFO,
-  RETRIEVE_EVENTS_QUERY : query_RETRIEVE_EVENTS_QUERY,
-  CLEAN_OLD_EVENTS_QUERY : query_CLEAN_OLD_EVENTS_QUERY,
-  ADD_EVENT_QUERY : query_ADD_EVENT_QUERY,
-  EVENTS_TO_UPDATE : query_EVENTS_TO_UPDATE
+  FB_EVENTS_TO_UPDATE : function() { return query_FB_EVENTS_TO_UPDATE;},
+  UPDATE_EVENT_INFO : function() { return query_UPDATE_EVENT_INFO;},
+  RETRIEVE_EVENTS_QUERY : function() { return query_RETRIEVE_EVENTS_QUERY;},
+  CLEAN_OLD_EVENTS_QUERY : function() { return query_CLEAN_OLD_EVENTS_QUERY;},
+  ADD_EVENT_QUERY : function() { return query_ADD_EVENT_QUERY;},
+  EVENTS_TO_UPDATE : function() { return query_EVENTS_TO_UPDATE;}
 };
 
 var eventLimitForFbQuery = 100;
