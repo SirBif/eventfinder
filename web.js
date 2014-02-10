@@ -75,7 +75,7 @@ function fetchUserInfo(uid, cb) {
 }
 
 function updateIfNeeded(userInfo, accessToken) {
-	if(shouldIUpdate(userInfo.get("last_update"), fetchListOfEventsEveryXHours)) {
+	if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
 		console.log('Updating user ' + uid);
 		doAnUpdate(accessToken, function() {
 		    userInfo.set("last_update", new Date());
@@ -88,7 +88,7 @@ function updateIfNeeded(userInfo, accessToken) {
 }
 
 function shouldIUpdate(last_update, minutes) {
-    if((last_update == undefined) || (last_update < moment().subtract('hours', 60 * minutes))) {
+    if((last_update == undefined) || (last_update < moment().subtract('minutes', minutes))) {
         return true;
     }
     return false;   
