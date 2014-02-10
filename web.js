@@ -6,6 +6,8 @@ var moment = require('moment');
 var async = require('async');
 var pg = require('pg');
 var mysql = require('mysql');
+
+var QUERY = require("./web-queries");
 var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
 
 
@@ -24,11 +26,6 @@ Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 var fetchListOfEventsEveryXHours = 6;
 var numberOfEventsToRetrieve = 50;
 var parallelAsyncHttpRequests = 5;
-var maxEventsToUpdate = 200;
-var updateEventEveryXHours = 4;
-var checkPlaceEveryXHours = 48;
-var eventLimitForFbQuery = 100;
-var askParseANewTokenAfterXMinutes = 30;
 var locationDistanceRadius = 10000;
 
 app.configure(function () {
@@ -52,26 +49,22 @@ app.listen(port, function() {
 app.all('/', function (req, res, next) {
 	res.render('index.html', {layout: false});
 });
-/*
-app.all('/login.html', function (req, res, next) {
-	res.render('login.html', {layout: false});
-});*/
-
-var token;
-var last_check;
 
 app.get('/login', function (req, res, next) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
-    if(accessToken != token) {
-        console.log('NEW TOKEN!!');
-        token = accessToken;
-        last_check = moment();
-    }
     console.log('Login from uid ' + uid);
-    fetchUserInfo(uid, function(userInfo) {updateIfNeeded(userInfo, uid, accessToken);});
+    fetchUserInfo(uid, function(userInfo) {
+        if(userInfo == undefined) {
+            var FacebookUser = Parse.Object.extend("FacebookUser");
+            userInfo = new FacebookUser();
+            userInfo.set("uid", uid);
+        }
+        userInfo.set("token", accessToken);
+        updateIfNeeded(userInfo, accessToken);
+    });
 });
 
 function fetchUserInfo(uid, cb) {
@@ -81,32 +74,28 @@ function fetchUserInfo(uid, cb) {
 	query.first().then(function(userInfo) {cb(userInfo);});
 }
 
-function updateIfNeeded(user, uid, accessToken) {
-	var beforeThisItsTooOld = moment().subtract('hours', fetchListOfEventsEveryXHours);
-	var userInfo = user;
-	if(userInfo == undefined) {
-		var FacebookUser = Parse.Object.extend("FacebookUser");
-		userInfo = new FacebookUser();
-		userInfo.set("uid", uid);
-	}
-	var last_update = userInfo.get("last_update");
-	if((last_update == undefined) || (last_update < beforeThisItsTooOld)) {
+function updateIfNeeded(userInfo, accessToken) {
+	if(shouldIUpdate(userInfo.get("last_update"), fetchListOfEventsEveryXHours)) {
 		console.log('Updating user ' + uid);
 		doAnUpdate(accessToken, function() {
 		    userInfo.set("last_update", new Date());
-	        userInfo.set("token", accessToken);
 	        userInfo.save();
 	     });
 	} else {
 	    console.log('No need to update events from uid ' + uid);
-        userInfo.set("token", accessToken);
 	    userInfo.save();
 	}
 }
 
+function shouldIUpdate(last_update, minutes) {
+    if((last_update == undefined) || (last_update < moment().subtract('hours', 60 * minutes);)) {
+        return true;
+    }
+    return false;   
+}
+
 function doAnUpdate(token, cb) {
-	var query = "SELECT eid, start_time FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now() AND eid IN (SELECT eid FROM event_member WHERE start_time > now() AND (uid IN(SELECT uid2 FROM friend WHERE uid1=me()) OR uid=me())ORDER BY start_time ASC LIMIT "+ eventLimitForFbQuery +") ORDER BY start_time ASC";
-	executeFbQuery(query, token, function(results) {insertEventsIntoDb(results.data, cb);});
+	executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE, token, function(results) {insertEventsIntoDb(results.data, cb);});
 }
 
 function executeFbQuery(query, token, cb) {
@@ -145,32 +134,14 @@ function insertEventsIntoDb(data, cb) {
     });
 }
 
-function getAToken(cb) {
-    var threshold = moment().subtract('minutes', askParseANewTokenAfterXMinutes);
-    if(last_check == undefined || threshold > last_check) {
-        console.log('Retrieving new token from Parse');
-        var FacebookUser = Parse.Object.extend("FacebookUser");
-	    var query = new Parse.Query(FacebookUser);
-	    query.descending("updatedAt")
-	    query.first().then(function(user) {
-	        token = user.get("token");
-	        last_check = moment();
-	        cb(token);
-	    });
-    } else {
-        cb(token);
-    }
-}
-
 function asyncInsert(eventIds, token, cb) {
-    var querySql = "INSERT INTO events(eid, start_date) values($1, $2);";
     async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, cb) {
         pg.connect(process.env.DATABASE_URL, function(error, client, done) {
             if(error) {
                 return;
             }
             if(eventRow.eid != undefined) {
-                doQuery(client, querySql, eventRow.eid, eventRow.start_time, done, cb);
+                doQuery(client, QUERY.ADD_EVENT_QUERY, eventRow.eid, eventRow.start_time, done, cb);
             } else {
                 done();
                 cb();
@@ -237,8 +208,7 @@ function writeSingleUpdateToDb(fbData, eid, cb) {
 }
 
 function updateEventInfo(eventData, cb) {
-    var query = "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=$6, name=left($7, 100), last_update = now() WHERE eid = $8;";
-    updateIntoDb(query, eventData, cb);
+    updateIntoDb(QUERY.UPDATE_EVENT_INFO, eventData, cb);
 }
 
 function updateIntoDb(querySql, data, cb) {
@@ -270,26 +240,37 @@ app.get('/retrieve', function (req, res, next) {
     var topLeftLon = req.query["topLeftLon"];
     var start_time = req.query["start"];
     var end_time = req.query["end"];
-    retrieveEventsInBox({'latitude':bottomRightLat, 'longitude':bottomRightLon} , {'latitude':topLeftLat,'longitude':topLeftLon}, start_time, end_time, function(rows) {
-        res.json(rows);
-    });
+    retrieveEventsInBox(
+        {
+            'latitude':bottomRightLat,
+            'longitude':bottomRightLon
+        } , {
+            'latitude':topLeftLat,
+            'longitude':topLeftLon
+        },
+        start_time,
+        end_time,
+        function(rows) {
+            res.json(rows);
+        }
+    );
 });
 
 function retrieveEventsInBox(bottomRight, topLeft, start, end, cb) {
-    var query = "";
-    
-    query += "SELECT name, start_date AS start_time, end_date AS end_time, attending_total AS people, location, latitude, longitude, eid ";
-    query += "FROM events WHERE";
-    query += " ( (start_date >= $5 AND start_date < $6)";
-    query += " OR (start_date < $5 AND end_date > $5) )";
-    query += " AND last_update IS NOT NULL";
-    //query += " AND earth_box(ll_to_earth("+lat+", "+lon+"), 60000) @> ll_to_earth(events.latitude, events.longitude)";
-    //query += " AND latitude > " + bottomRight.latitude + " AND latitude < " + topLeft.latitude;
-    query += " AND latitude > $1 AND latitude < $2";
-    //query += " AND longitude < " + bottomRight.longitude + " AND longitude > " + topLeft.longitude;
-    query += " AND longitude < $3 AND longitude > $4";
-    query += " ORDER BY people DESC LIMIT $7"// + numberOfEventsToRetrieve;*/
-    executePS('retrieveEventsPs', query, [bottomRight.latitude, topLeft.latitude, bottomRight.longitude, topLeft.longitude, moment(start), moment(end), numberOfEventsToRetrieve], cb);
+    executePS(
+        'retrieveEventsPs',
+        QUERY.RETRIEVE_EVENTS_QUERY,
+        [
+            bottomRight.latitude,
+            topLeft.latitude,
+            bottomRight.longitude,
+            topLeft.longitude,
+            moment(start),
+            moment(end),
+            numberOfEventsToRetrieve
+        ],
+        cb
+    );
 }
 
 function executePS(name, queryString, params, cb) {
@@ -334,30 +315,9 @@ function executeQuery(queryString, cb) {
     });
 };
 
-app.get('/update', function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end();
-    doTheBigUpdate();
-});
-
-function doTheBigUpdate() {
-    executeQuery("delete from events where (start_date < now() - interval '24 hours' AND end_date IS NULL) OR (end_date < now())", function(nvm) {
-        retrieveEventsToUpdate(function(eventRows) {
-            if(eventRows.length > 0) {
-                console.log('Number of events to update: ' + eventRows.length);
-                getAToken(function(token) {asyncRetrieve(eventRows, token);});
-            } else {
-                console.log("No need to update the events data");
-            }
-        });
-    });
-}
-
 function retrieveEventsToUpdate(cb) {
-    var limit = maxEventsToUpdate;
     console.log('Retrieving events to update');
-    var query= "SELECT eid FROM events where ((last_update < (now() - INTERVAL '"+ updateEventEveryXHours +" hours')) or last_update IS NULL) and start_date >= now() ORDER BY last_update ASC LIMIT " + limit;
-    executeQuery(query, cb);
+    executeQuery(QUERY.EVENTS_TO_UPDATE, cb);
 };
 
 function asyncRetrieve(eventRows, token) {
@@ -405,209 +365,33 @@ function getNumberOfElements(size) {
    return (size - 10) / 12;
 }
 
-app.get('/babam', function (req, res) {
+app.get('/update', function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
-    babamUpdate();
+    executeBatchUpdate();
 });
 
-app.get('/updateToken', function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end();
-    var newToken = req.query["token"];
-    if(newToken != token) {
-        console.log('NEW TOKEN!!');
-        token = newToken;
+function executeBatchUpdate() {
+    executeQuery(QUERY.CLEAN_OLD_EVENTS_QUERY, function(nvm) {
+        retrieveEventsToUpdate(function(eventRows) {
+            if(eventRows.length > 0) {
+                console.log('Number of events to update: ' + eventRows.length);
+                getAToken(function(token) {asyncRetrieve(eventRows, token);});
+            } else {
+                console.log("No need to update the events data");
+            }
+        });
+    });
+}
+
+function getAToken(cb) {
+    console.log('Retrieving new token from Parse');
+    var FacebookUser = Parse.Object.extend("FacebookUser");
+    var query = new Parse.Query(FacebookUser);
+    query.descending("updatedAt")
+    query.first().then(function(user) {
+        token = user.get("token");
         last_check = moment();
-    }
-});
-
-function babamInsert(event, cb) {
-    var querySql = "INSERT INTO events(eid, start_date) values($1, $2);";
-    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
-        if(error) {
-            return;
-        }
-        if(event.id != undefined) {
-            doQuery(client, querySql, event.id, event.start_time, done, cb);
-        } else {
-            done();
-            cb();
-        }
+        cb(token);
     });
-}
-
-function updatePlace(place, cb) {
-    getEvents(place, function() {
-        pool.getConnection(function(err, connection) {
-            connection.query( 'UPDATE places SET last_update = ? where id = ?', [moment().format(), place.id],function(err, rows) {
-                connection.end();
-                cb();
-            });
-        });
-    });
-}
-
-function getEvents(place, getEventsCb) {
-    var theToken = token;
-    var path = "/"+place.id+"/events?fields=id,start_time&access_token="+theToken;
-    var options = {
-		hostname: 'graph.facebook.com',
-		port: 443,
-		agent: false,
-		path: path
-	};
-	if(placesQueue.length()%100 == 0) {
-	    console.log("Places: "+ placesQueue.length());
-	}
-    var myreq = https.request(options, function (result) {
-        var data = "";
-        result.on('data', function (d) {
-	        data+=d;
-        });
-        result.on('error', function (err) {
-            console.log('Error: ' + err);
-            placesQueue.push(path);  
-            getEventsCb();
-            return;
-        });
-        result.on('end', function() {
-            var json = JSON.parse(data);
-            if(json.data) {
-                async.forEach(json.data, function(entry, cb) {
-                    console.log(entry.id + " " + place.name);
-                    babamInsert(entry, cb);
-                }, function(err) {
-                    getEventsCb();
-                });
-            } else {
-                getEventsCb();
-            }
-        });
-    })
-    myreq.on('error', function(e) {
-        console.log(e);
-        getEventsCb();
-    });
-    myreq.end();
-}
-
-function checkPlace(place) {
-    pool.getConnection(function(err, connection) {
-        connection.query( 'select last_update from places where id = ?', [place.id],function(err, rows) {
-            if(rows.length > 0) {
-                connection.end();
-                var dbResult = rows[0];
-                var beforeThisItsTooOld = moment().subtract('hours', checkPlaceEveryXHours);
-                if(dbResult['last_update'] < beforeThisItsTooOld) {
-                    placesQueue.push(place);
-                }
-            } else {
-               connection.query( 'INSERT INTO places(id, name, last_update) values(?, ?, NULL)', [place.id, place.name],function(err, rows) {
-                    connection.end();
-               });
-            }
-        });
-    });
-}
-
-function getNext(path, completeCb) {
-    var options = {
-		hostname: 'graph.facebook.com',
-		port: 443,
-		agent: false,
-		path: path
-	};
-	console.log("Locations: "+ locationsQueue.length());
-    var myreq = https.request(options, function (result) {
-        var data = "";
-        result.on('data', function (d) {
-            data+=d;
-        });
-        result.on('error', function (err) {
-            console.log('Error: ' + err);
-            locationsQueue.push(path);
-            completeCb();
-            return;
-        });
-        result.on('end', function() {
-            var json = JSON.parse(data);
-            var last = false;
-            if(json.error == undefined) {
-                if(json.paging && json.paging.next) {
-                    var array = json.paging.next.split("/");
-	                locationsQueue.push("/"+array[3]);
-                }
-                if(json.data) {
-                    var theArray = json.data;
-                    var l = theArray.length;
-                    var place;
-                    for(var i=0;i<l;i++){
-                        place = theArray[i];
-                        if(place.id != undefined) {
-                            checkPlace(place);
-                        }  
-                    }
-                }
-                completeCb();
-	        } else {
-	            console.log('Request ended with error: '+ JSON.stringify(json));
-	            completeCb();   
-	        }
-        });
-    });
-    myreq.on('error', function(e) {
-        console.log(e);
-        completeCb();
-    });
-    myreq.end();
-}
-
-var placesQueue = async.queue(function(venue, callback) {
-    updatePlace(venue, callback);
-}, 30);
-placesQueue.drain = function() {
-    addLocations();
-};
-
-var locationsQueue = async.queue(function(thePath, callback) {
-    getNext(thePath, callback);
-}, 5);
-locationsQueue.drain = function() {
-};
-
-function addLocations() {
-    pool.getConnection(function(err, connection) {
-        if(err){ console.log(err); } else {
-            connection.query("SELECT id, name, lat, lng FROM comuni WHERE ((last_update < '"+moment().subtract('hours', 48).format()+"') OR (last_update IS NULL)) LIMIT 10;", function(err, rows, fields) {
-                connection.end();
-                if (err) {
-                    console.log(err);
-                } else {                
-                    async.eachLimit(rows, 5, function(myLocation, cb) {
-                        var theToken = token;
-                        if(myLocation['name']) {
-                            console.log(myLocation['name']);
-                            var thePath = "/search?type=place&center="+myLocation['lat']+","+myLocation['lng']+"&distance="+locationDistanceRadius+"&fields=id,location,name&access_token=" + theToken;
-                            locationsQueue.push(thePath);
-                            pool.getConnection(function(err, connection2) {
-                                connection2.query("UPDATE comuni SET last_update = '"+moment().format()+"' WHERE id = ?", [myLocation['id']],function(err, rows, fields) {
-                                    connection2.end();
-                                    cb();
-                                });
-                                //console.log('inner mysql connection closed');
-                            });
-                         }
-                    }, function(error) {
-                        console.log(error);
-                    });
-                }
-            });
-            //console.log('outer mysql connection closed');
-        }
-    });
-}
-
-function babamUpdate() {
-    addLocations();
 }
