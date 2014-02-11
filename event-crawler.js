@@ -1,5 +1,9 @@
 var token;
 var last_check;
+var mysql = require('mysql');
+var locationDistanceRadius = 10000;
+
+var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
 
 //crawler version
 app.get('/login', function (req, res, next) {

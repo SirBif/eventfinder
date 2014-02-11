@@ -5,11 +5,7 @@ var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
 var pg = require('pg');
-var mysql = require('mysql');
-
 var QUERY = require("./web-queries");
-var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
-
 
 https.globalAgent.maxSockets = 80;
 /*
@@ -24,9 +20,8 @@ var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var fetchListOfEventsEveryXHours = 6;
-var numberOfEventsToRetrieve = 50;
+var numberOfEventsToRetrieve = 20;
 var parallelAsyncHttpRequests = 5;
-var locationDistanceRadius = 10000;
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
@@ -82,7 +77,7 @@ function updateIfNeeded(userInfo, accessToken) {
 	        userInfo.save();
 	     });
 	} else {
-	    console.log('No need to update events from uid ' + uid);
+	    //console.log('No need to update events from uid ' + uid);
 	    userInfo.save();
 	}
 }
@@ -118,7 +113,7 @@ function executeFbQuery(query, token, cb) {
         result.on('end', function() {
             var theData = JSON.parse(data.join(''));
             if(theData.error == undefined) {
-                console.log('Data Retrieved');
+                //console.log('Data Retrieved');
                 cb(theData);
 	        } else {
 	            console.log('FB query ended with error: '+ JSON.stringify(theData));   
@@ -162,17 +157,16 @@ function asyncInsert(eventIds, token, cb) {
 function doQuery(client, token, querySql, eid, start_time, done, cb) {
     var query = client.query(querySql, [eid, start_time]);
     query.on('error', function(error) {
-        if(error.code == 23505) { //if it's already present
-            error = 'Already present: ' + eid;
-        }
         done();
         cb();
-        console.log(error);
+        if(error.code <> 23505) { //ignore the error "it's already present"
+            console.log(error);
+        }        
     });
     query.on('end', function(result) {
         done();
         if(result != undefined) {
-            console.log('Adding event ' + eid);
+            //console.log('Adding event ' + eid);
             retrieveEventInfo(eid, token, function(fbData) {
                 writeSingleUpdateToDb(fbData, eid, cb);
             });
@@ -181,7 +175,7 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
 }
 
 function retrieveEventInfo(eid, tok, cb) {
-    console.log('Retrieving info about event ' + eid);
+    //console.log('Retrieving info about event ' + eid);
     var query = "{"+
                     "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
@@ -190,7 +184,7 @@ function retrieveEventInfo(eid, tok, cb) {
 }
 
 function writeSingleUpdateToDb(fbData, eid, cb) {
-    console.log('Retrieved fields for event ' + eid);
+    //console.log('Retrieved fields for event ' + eid);
     try{
         var data = fbData.data;
         var eventData = [
@@ -229,7 +223,7 @@ function updateIntoDb(querySql, data, cb) {
         query.on('end', function(result) {
             done();
             cb();
-            console.log('Saved');
+            //console.log('Saved');
         });
     });
 }
@@ -318,7 +312,7 @@ function executeQuery(queryString, cb) {
 };
 
 function retrieveEventsToUpdate(cb) {
-    console.log('Retrieving events to update');
+    //console.log('Retrieving events to update');
     executeQuery(QUERY.EVENTS_TO_UPDATE(), cb);
 };
 
@@ -337,7 +331,7 @@ function asyncRetrieve(eventRows, token) {
 }
 
 function retrieveEventGirls(eid, tok, cb) {
-    console.log('Contacting FB to retrieve info about event ' + eid);
+    //console.log('Contacting FB to retrieve info about event ' + eid);
     query = "select '' from user where sex = 'female' and uid in (select uid from event_member where eid ='"+eid+"' and rsvp_status = 'attending')";
 	executeFbQuery_HeadOnly(query, tok, cb);
 }
@@ -387,7 +381,7 @@ function executeBatchUpdate() {
 }
 
 function getAToken(cb) {
-    console.log('Retrieving new token from Parse');
+    //console.log('Retrieving new token from Parse');
     var FacebookUser = Parse.Object.extend("FacebookUser");
     var query = new Parse.Query(FacebookUser);
     query.descending("updatedAt")
