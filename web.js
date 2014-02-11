@@ -95,7 +95,7 @@ function shouldIUpdate(last_update, minutes) {
 }
 
 function doAnUpdate(token, cb) {
-	executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE, token, function(results) {insertEventsIntoDb(results.data, cb);});
+	executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {insertEventsIntoDb(results.data, cb);});
 }
 
 function executeFbQuery(query, token, cb) {
@@ -141,7 +141,7 @@ function asyncInsert(eventIds, token, cb) {
                 return;
             }
             if(eventRow.eid != undefined) {
-                doQuery(client, QUERY.ADD_EVENT_QUERY, eventRow.eid, eventRow.start_time, done, cb);
+                doQuery(client, QUERY.ADD_EVENT_QUERY(), eventRow.eid, eventRow.start_time, done, cb);
             } else {
                 done();
                 cb();
@@ -208,7 +208,7 @@ function writeSingleUpdateToDb(fbData, eid, cb) {
 }
 
 function updateEventInfo(eventData, cb) {
-    updateIntoDb(QUERY.UPDATE_EVENT_INFO, eventData, cb);
+    updateIntoDb(QUERY.UPDATE_EVENT_INFO(), eventData, cb);
 }
 
 function updateIntoDb(querySql, data, cb) {
@@ -259,7 +259,7 @@ app.get('/retrieve', function (req, res, next) {
 function retrieveEventsInBox(bottomRight, topLeft, start, end, cb) {
     executePS(
         'retrieveEventsPs',
-        QUERY.RETRIEVE_EVENTS_QUERY,
+        QUERY.RETRIEVE_EVENTS_QUERY(),
         [
             bottomRight.latitude,
             topLeft.latitude,
@@ -317,7 +317,7 @@ function executeQuery(queryString, cb) {
 
 function retrieveEventsToUpdate(cb) {
     console.log('Retrieving events to update');
-    executeQuery(QUERY.EVENTS_TO_UPDATE, cb);
+    executeQuery(QUERY.EVENTS_TO_UPDATE(), cb);
 };
 
 function asyncRetrieve(eventRows, token) {
@@ -372,7 +372,7 @@ app.get('/update', function (req, res) {
 });
 
 function executeBatchUpdate() {
-    executeQuery(QUERY.CLEAN_OLD_EVENTS_QUERY, function(nvm) {
+    executeQuery(QUERY.CLEAN_OLD_EVENTS_QUERY(), function(nvm) {
         retrieveEventsToUpdate(function(eventRows) {
             if(eventRows.length > 0) {
                 console.log('Number of events to update: ' + eventRows.length);
