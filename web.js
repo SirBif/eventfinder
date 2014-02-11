@@ -159,7 +159,7 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
     query.on('error', function(error) {
         done();
         cb();
-        if(error.code <> 23505) { //ignore the error "it's already present"
+        if(error.code != 23505) { //ignore the error "it's already present"
             console.log(error);
         }        
     });
