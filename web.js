@@ -145,7 +145,7 @@ function asyncInsert(eventIds, token, cb) {
                 return;
             }
             if(eventRow.eid != undefined) {
-                doQuery(client, QUERY.ADD_EVENT_QUERY(), eventRow.eid, eventRow.start_time, done, cb);
+                doQuery(client, token, QUERY.ADD_EVENT_QUERY(), eventRow.eid, eventRow.start_time, done, cb);
             } else {
                 done();
                 cb();
@@ -159,7 +159,7 @@ function asyncInsert(eventIds, token, cb) {
     });
 }
 
-function doQuery(client, querySql, eid, start_time, done, cb) {
+function doQuery(client, token, querySql, eid, start_time, done, cb) {
     var query = client.query(querySql, [eid, start_time]);
     query.on('error', function(error) {
         if(error.code == 23505) { //if it's already present
@@ -173,10 +173,8 @@ function doQuery(client, querySql, eid, start_time, done, cb) {
         done();
         if(result != undefined) {
             console.log('Adding event ' + eid);
-            getAToken(function(token) {
-                retrieveEventInfo(eid, token, function(fbData) {
-                    writeSingleUpdateToDb(fbData, eid, cb);
-                });
+            retrieveEventInfo(eid, token, function(fbData) {
+                writeSingleUpdateToDb(fbData, eid, cb);
             });
         }
     });
