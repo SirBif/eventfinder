@@ -95,7 +95,7 @@ function shouldIUpdate(last_update, minutes) {
 }
 
 function doAnUpdate(token, cb) {
-	executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {insertEventsIntoDb(results.data, cb);});
+	executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {insertEventsIntoDb(results.data, cb, token);});
 }
 
 function executeFbQuery(query, token, cb) {
@@ -132,6 +132,10 @@ function insertEventsIntoDb(data, cb) {
     getAToken(function(theToken) {
         asyncInsert(data, theToken, cb);
     });
+}
+
+function insertEventsIntoDb(data, cb, theToken) {
+    asyncInsert(data, theToken, cb);
 }
 
 function asyncInsert(eventIds, token, cb) {
