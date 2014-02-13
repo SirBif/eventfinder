@@ -1,7 +1,7 @@
-DATABASE_URL=postgres://postgres:1@localhost:5432/localem
-FACEBOOK_APP_ID=180798855409162
-FACEBOOK_SECRET=7d5b6a35d8c08d6aac512b6d85243a2f
-NODE_ENV=development
 parseAppId=uB7oZlwqkTF3eqebbh9rsL15upvDsKyfKa7O8Bmn
 parseJsKey=3f0zSS9G5GRrICBYHRbkeb8ee8k9mSBu6t59NyBi
-CLEARDB_DATABASE_URL=mysql://b5bfef520ee488:6d597b8d@eu-cdbr-west-01.cleardb.com/heroku_aabb7e023eff95d?reconnect=true
+FACEBOOK_APP_ID=180798855409162
+FACEBOOK_SECRET=7d5b6a35d8c08d6aac512b6d85243a2f
+DATABASE_URL=postgres://postgres:1@localhost:5432/localem
+
+
