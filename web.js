@@ -112,7 +112,9 @@ function executeFbQuery(query, token, cb) {
         });
         result.on('end', function() {
             var theData = JSON.parse(data.join(''));
-            if(theData.error == undefined) {
+            if(theData == undefined) {
+                console.log('Data undefined');
+            } else if(theData.error == undefined) {
                 //console.log('Data Retrieved');
                 cb(theData);
             } else {
@@ -123,19 +125,11 @@ function executeFbQuery(query, token, cb) {
     req.end();
 }
 
-function insertEventsIntoDb(data, cb) {
-    getAToken(function(theToken) {
-        asyncInsert(data, theToken, cb);
-    });
-}
-
 function insertEventsIntoDb(data, cb, theToken) {
     asyncInsert(data, theToken, cb);
 }
 
 function asyncInsert(eventIds, token, cb) {
-    console.log(eventIds);
-    console.log(token);
     async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, cb) {
         pg.connect(process.env.DATABASE_URL, function(error, client, done) {
             if(error) {
