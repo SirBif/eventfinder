@@ -134,6 +134,8 @@ function insertEventsIntoDb(data, cb, theToken) {
 }
 
 function asyncInsert(eventIds, token, cb) {
+    console.log(eventIds);
+    console.log(token);
     async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, cb) {
         pg.connect(process.env.DATABASE_URL, function(error, client, done) {
             if(error) {
