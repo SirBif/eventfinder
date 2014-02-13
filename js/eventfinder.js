@@ -106,7 +106,7 @@ function getContent(entry) {
     result += "<tr><td>Start: " + moment(entry.start_time).format('LLL') + '</td></tr>';
     result += (entry.end_time) ? "<tr><td>End: " + moment(entry.end_time).format('LLL') + '</td></tr>' : "";
     result += "<tr><td>Location: " + entry.location + '</td></tr>';
-    result += "<tr><td>Going: " + entry.people + '</td></tr>';
+    result += "<tr><td>Going: " + entry.people +'('+entry.female_participants+')'+'</td></tr>';
     result += '</table>';
     return result;
 }

@@ -168,7 +168,9 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
         if(result != undefined) {
             //console.log('Adding event ' + eid);
             retrieveEventInfo(eid, token, function(fbData) {
-                writeSingleUpdateToDb(fbData, eid, cb);
+                retrieveEventGirls(eid, token, function(number) {
+                    writeSingleUpdateToDb(fbData, number, eid, cb);
+                });
             });
         }
     });
@@ -183,7 +185,7 @@ function retrieveEventInfo(eid, tok, cb) {
 	executeFbQuery(query, tok, cb);
 }
 
-function writeSingleUpdateToDb(fbData, eid, cb) {
+function writeSingleUpdateToDb(fbData, number, eid, cb) {
     //console.log('Retrieved fields for event ' + eid);
     try{
         var data = fbData.data;
@@ -195,7 +197,8 @@ function writeSingleUpdateToDb(fbData, eid, cb) {
             (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.longitude : null,
             data[0].fql_result_set[0].location,
             data[0].fql_result_set[0].name,
-            data[0].fql_result_set[0].eid                    
+            data[0].fql_result_set[0].eid,
+            number                    
          ];
          updateEventInfo(eventData, cb);
      } catch(err) {
@@ -318,14 +321,18 @@ function retrieveEventsToUpdate(cb) {
 
 function asyncRetrieve(eventRows, token) {
     async.eachLimit(eventRows, parallelAsyncHttpRequests, function(eventRow, cb) {
-        retrieveEventInfo(eventRow.eid, token, function(fbData) {
-            writeSingleUpdateToDb(fbData, eventRow.eid, cb);
+        var eid = eventRow.eid;
+        retrieveEventInfo(eid, token, function(fbData) {
+            retrieveEventGirls(eid, token, function(number) {
+                writeSingleUpdateToDb(fbData, number, eid, cb);
+            });
         });
     }, function(err) {
         if (err) {
             console.log('Retrieve problem:' +err);
         } else {
-          doTheBigUpdate(); 
+          //doTheBigUpdate(); 
+          //what was I supposed to do here???
         }
     });
 }
@@ -351,14 +358,14 @@ function executeFbQuery_HeadOnly(query, token, cb) {
         var header = response.headers;
         response.destroy();        
         var elements = getNumberOfElements(header['content-length']);
-        console.log(elements);
+        console.log("Size: "+elements);
         cb(elements);
     });
     myReq.end();
 }
 
 function getNumberOfElements(size) {
-   return (size - 10) / 12;
+   return Math.floor((size - 10) / 12);
 }
 
 app.get('/update', function (req, res) {

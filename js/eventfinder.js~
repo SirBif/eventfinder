@@ -58,7 +58,7 @@ function updateMarkers() {
     }
     var bottomRight = properties.bbox.bottomRight;
     var topLeft = properties.bbox.topLeft;
-    var requestString = "/retrieve2?";
+    var requestString = "/retrieve?";
     requestString += "bottomRightLat=" + bottomRight.latitude;
     requestString += "&bottomRightLon=" + bottomRight.longitude;
     requestString += "&topLeftLat=" + topLeft.latitude;
@@ -106,7 +106,7 @@ function getContent(entry) {
     result += "<tr><td>Start: " + moment(entry.start_time).format('LLL') + '</td></tr>';
     result += (entry.end_time) ? "<tr><td>End: " + moment(entry.end_time).format('LLL') + '</td></tr>' : "";
     result += "<tr><td>Location: " + entry.location + '</td></tr>';
-    result += "<tr><td>Going: " + entry.people + '</td></tr>';
+    result += "<tr><td>Going: " + entry.people +'('+entry.attending_f+')'+'</td></tr>';
     result += '</table>';
     return result;
 }
