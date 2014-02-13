@@ -26,13 +26,13 @@ var parallelAsyncHttpRequests = 5;
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
     app.use(express.compress());
-	app.use(express.bodyParser());
-	app.use(express.cookieParser());
-	app.set('title', 'Event Finder');
-	app.use("/js", express.static(__dirname + '/js'));
-	app.use("/css", express.static(__dirname + '/css'));
-	app.use("/misc", express.static(__dirname + '/misc'));
-	app.register('.html', require('ejs'));
+    app.use(express.bodyParser());
+    app.use(express.cookieParser());
+    app.set('title', 'Event Finder');
+    app.use("/js", express.static(__dirname + '/js'));
+    app.use("/css", express.static(__dirname + '/css'));
+    app.use("/misc", express.static(__dirname + '/misc'));
+    app.register('.html', require('ejs'));
     app.set('views',__dirname+'/views');
 });
 
@@ -42,7 +42,7 @@ app.listen(port, function() {
 });
 
 app.all('/', function (req, res, next) {
-	res.render('index.html', {layout: false});
+    res.render('index.html', {layout: false});
 });
 
 app.get('/login', function (req, res, next) {
@@ -64,22 +64,22 @@ app.get('/login', function (req, res, next) {
 
 function fetchUserInfo(uid, cb) {
     var FacebookUser = Parse.Object.extend("FacebookUser");
-	var query = new Parse.Query(FacebookUser);
-	query.equalTo("uid", uid);
-	query.first().then(function(userInfo) {cb(userInfo);});
+    var query = new Parse.Query(FacebookUser);
+    query.equalTo("uid", uid);
+    query.first().then(function(userInfo) {cb(userInfo);});
 }
 
 function updateIfNeeded(userInfo, accessToken) {
-	if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
-		console.log('Updating user ' + userInfo.get("uid"));
-		doAnUpdate(accessToken, function() {
-		    userInfo.set("last_update", new Date());
-	        userInfo.save();
-	     });
-	} else {
-	    //console.log('No need to update events from uid ' + uid);
-	    userInfo.save();
-	}
+    if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
+        console.log('Updating user ' + userInfo.get("uid"));
+        doAnUpdate(accessToken, function() {
+            userInfo.set("last_update", new Date());
+            userInfo.save();
+         });
+    } else {
+        //console.log('No need to update events from uid ' + uid);
+        userInfo.save();
+    }
 }
 
 function shouldIUpdate(last_update, minutes) {
@@ -90,22 +90,22 @@ function shouldIUpdate(last_update, minutes) {
 }
 
 function doAnUpdate(token, cb) {
-	executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {insertEventsIntoDb(results.data, cb, token);});
+    executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {insertEventsIntoDb(results.data, cb, token);});
 }
 
 function executeFbQuery(query, token, cb) {
-	var options = {
-		hostname: 'graph.facebook.com',
-		port: 443,
-		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-		method: 'GET',
-		agent: false
-	};
-	
+    var options = {
+        hostname: 'graph.facebook.com',
+        port: 443,
+        path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
+        method: 'GET',
+        agent: false
+    };
+    
     var req = https.request(options, function (result) {
         var data = [];
         result.on('data', function (d) {
-	        data.push(d);
+            data.push(d);
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
@@ -115,9 +115,9 @@ function executeFbQuery(query, token, cb) {
             if(theData.error == undefined) {
                 //console.log('Data Retrieved');
                 cb(theData);
-	        } else {
-	            console.log('FB query ended with error: '+ JSON.stringify(theData));   
-	        }
+            } else {
+                console.log('FB query ended with error: '+ JSON.stringify(theData));   
+            }
         });
     });
     req.end();
@@ -168,7 +168,9 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
         if(result != undefined) {
             //console.log('Adding event ' + eid);
             retrieveEventInfo(eid, token, function(fbData) {
-                writeSingleUpdateToDb(fbData, eid, cb);
+                retrieveEventGirls(eid, token, function(number) {
+                    writeSingleUpdateToDb(fbData, number, eid, cb);
+                });
             });
         }
     });
@@ -180,10 +182,10 @@ function retrieveEventInfo(eid, tok, cb) {
                     "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
-	executeFbQuery(query, tok, cb);
+    executeFbQuery(query, tok, cb);
 }
 
-function writeSingleUpdateToDb(fbData, eid, cb) {
+function writeSingleUpdateToDb(fbData, number, eid, cb) {
     //console.log('Retrieved fields for event ' + eid);
     try{
         var data = fbData.data;
@@ -195,7 +197,8 @@ function writeSingleUpdateToDb(fbData, eid, cb) {
             (data[1].fql_result_set[0]) ? data[1].fql_result_set[0].location.longitude : null,
             data[0].fql_result_set[0].location,
             data[0].fql_result_set[0].name,
-            data[0].fql_result_set[0].eid                    
+            data[0].fql_result_set[0].eid,
+            number                    
          ];
          updateEventInfo(eventData, cb);
      } catch(err) {
@@ -318,14 +321,18 @@ function retrieveEventsToUpdate(cb) {
 
 function asyncRetrieve(eventRows, token) {
     async.eachLimit(eventRows, parallelAsyncHttpRequests, function(eventRow, cb) {
-        retrieveEventInfo(eventRow.eid, token, function(fbData) {
-            writeSingleUpdateToDb(fbData, eventRow.eid, cb);
+        var eid = eventRow.eid;
+        retrieveEventInfo(eid, token, function(fbData) {
+            retrieveEventGirls(eid, token, function(number) {
+                writeSingleUpdateToDb(fbData, number, eid, cb);
+            });
         });
     }, function(err) {
         if (err) {
             console.log('Retrieve problem:' +err);
         } else {
-          doTheBigUpdate(); 
+          //doTheBigUpdate(); 
+          //what was I supposed to do here???
         }
     });
 }
@@ -333,32 +340,32 @@ function asyncRetrieve(eventRows, token) {
 function retrieveEventGirls(eid, tok, cb) {
     //console.log('Contacting FB to retrieve info about event ' + eid);
     query = "select '' from user where sex = 'female' and uid in (select uid from event_member where eid ='"+eid+"' and rsvp_status = 'attending')";
-	executeFbQuery_HeadOnly(query, tok, cb);
+    executeFbQuery_HeadOnly(query, tok, cb);
 }
 
 function executeFbQuery_HeadOnly(query, token, cb) {
-	var options = {
-		host: 'graph.facebook.com',
-		port: 443,
-		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-		method: 'GET',
-		headers: {
-		    'Accept-Encoding': 'identity',
-		    'agent': false
-		}
-	};
+    var options = {
+        host: 'graph.facebook.com',
+        port: 443,
+        path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
+        method: 'GET',
+        headers: {
+            'Accept-Encoding': 'identity',
+            'agent': false
+        }
+    };
     var myReq = https.request(options, function (response) {
         var header = response.headers;
         response.destroy();        
         var elements = getNumberOfElements(header['content-length']);
-        console.log(elements);
+        console.log("Size: "+elements);
         cb(elements);
     });
     myReq.end();
 }
 
 function getNumberOfElements(size) {
-   return (size - 10) / 12;
+   return Math.floor((size - 10) / 12);
 }
 
 app.get('/update', function (req, res) {

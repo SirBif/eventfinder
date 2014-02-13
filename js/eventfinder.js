@@ -1,35 +1,35 @@
 var fbAppId=180798855409162;
-window.fbAsyncInit = function() {		
-	FB.init({
-		appId      : fbAppId, // Facebook App ID
-		channelUrl : '//enigmatic-cove-8808-735.herokuapp.com/misc/channel.html',
-		cookie     : true, // enable cookies to allow Parse to access the session
-		xfbml      : true  // parse XFBML
-	});
+window.fbAsyncInit = function() {       
+    FB.init({
+        appId      : fbAppId, // Facebook App ID
+        channelUrl : '//enigmatic-cove-8808-735.herokuapp.com/misc/channel.html',
+        cookie     : true, // enable cookies to allow Parse to access the session
+        xfbml      : true  // parse XFBML
+    });
 
-	FB.Event.subscribe('auth.authResponseChange', function(response) {
-		// Here we specify what we do with the response anytime this event occurs. 
-		if (response.status === 'connected') {
-			$('#fbButton').addClass('hide');
-			$('#toggleButton').removeClass('hide');
-			handleLogin();
-		} else if (response.status === 'not_authorized') {
-		    $('#fbButton').removeClass('hide');
-			FB.login();
-		} else {
-		    $('#fbButton').removeClass('hide');
-			FB.login();
-		}
-	});
+    FB.Event.subscribe('auth.authResponseChange', function(response) {
+        // Here we specify what we do with the response anytime this event occurs. 
+        if (response.status === 'connected') {
+            $('#fbButton').addClass('hide');
+            $('#toggleButton').removeClass('hide');
+            handleLogin();
+        } else if (response.status === 'not_authorized') {
+            $('#fbButton').removeClass('hide');
+            FB.login();
+        } else {
+            $('#fbButton').removeClass('hide');
+            FB.login();
+        }
+    });
 };
 
 // Load the SDK asynchronously
 (function(d){
-	var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
-	if (d.getElementById(id)) {return;}
-	js = d.createElement('script'); js.id = id; js.async = true;
-	js.src = "//connect.facebook.net/en_US/all.js";
-	ref.parentNode.insertBefore(js, ref);
+    var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+    if (d.getElementById(id)) {return;}
+    js = d.createElement('script'); js.id = id; js.async = true;
+    js.src = "//connect.facebook.net/en_US/all.js";
+    ref.parentNode.insertBefore(js, ref);
 }(document));
 
 var myLocation;
@@ -72,14 +72,14 @@ function updateMarkers() {
 }
 
 function handleLogin() {
-	FB.getLoginStatus(function(response) {
-		if (response.status === 'connected') {
-			var uid = response.authResponse.userID;
-			var accessToken = response.authResponse.accessToken;
-			if(myLocation == undefined) {
-			    myLocation = [44.843699,11.619072];
-			}
-		    $('#mapContainer').jHERE({
+    FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+            var uid = response.authResponse.userID;
+            var accessToken = response.authResponse.accessToken;
+            if(myLocation == undefined) {
+                myLocation = [44.843699,11.619072];
+            }
+            $('#mapContainer').jHERE({
                 enable: ['behavior', 'positioning', 'zoombar', 'scalebar'],
                 center: myLocation,
                 zoom: 9,
@@ -95,9 +95,9 @@ function handleLogin() {
                 //we load the markers for the 1st time
                 updateMarkers();
             });
-			$.get("/login", {uid: uid, token : accessToken});
-		}
-	});
+            $.get("/login", {uid: uid, token : accessToken});
+        }
+    });
 }
 
 function getContent(entry) {
@@ -106,27 +106,27 @@ function getContent(entry) {
     result += "<tr><td>Start: " + moment(entry.start_time).format('LLL') + '</td></tr>';
     result += (entry.end_time) ? "<tr><td>End: " + moment(entry.end_time).format('LLL') + '</td></tr>' : "";
     result += "<tr><td>Location: " + entry.location + '</td></tr>';
-    result += "<tr><td>Going: " + entry.people + '</td></tr>';
+    result += "<tr><td>Going: " + entry.people +'('+entry.female_participants+')'+'</td></tr>';
     result += '</table>';
     return result;
 }
 
 function printResults(results) {
-	if(results == undefined) {			
+    if(results == undefined) {          
         // stuff
-	} else {
+    } else {
         $('#mapContainer').jHERE('nomarkers');
         $('#list').empty();
         var i = results.length;
         results.reverse().forEach(function(entry) {
-            var positionArray = [parseFloat(entry.latitude), parseFloat(entry.longitude)];			 	
-	        $('#mapContainer').jHERE('marker', positionArray, {
-            	text: i,
-            	mouseenter: function(event) {
-            	    showBubble(positionArray, getContent(entry));
+            var positionArray = [parseFloat(entry.latitude), parseFloat(entry.longitude)];              
+            $('#mapContainer').jHERE('marker', positionArray, {
+                text: i,
+                mouseenter: function(event) {
+                    showBubble(positionArray, getContent(entry));
                 },
                 click: function(event) {
-            	    showBubble(positionArray, getContent(entry));
+                    showBubble(positionArray, getContent(entry));
                 }
             });
             var listItem = document.createElement('li');
@@ -134,7 +134,7 @@ function printResults(results) {
             $('#list').prepend(listItem);
             i--;
         });
-	}
+    }
 }
 
 function showBubble(positionArray, myContent) {
