@@ -15,5 +15,5 @@ var query_CLEAN_OLD_EVENTS_QUERY = "DELETE FROM         events     WHERE        
 var query_ADD_EVENT_QUERY = "INSERT INTO events(eid, start_date) values($1, $2);";
 
 var maxEventsToUpdate = 200;
-var updateEventEveryXHours = 1;
+var updateEventEveryXHours = 0;
 var query_EVENTS_TO_UPDATE = "SELECT         eid     FROM         events     WHERE         (             last_update IS NULL OR             last_update < (now() - INTERVAL '"+ updateEventEveryXHours +" hours')         )          AND start_date >= now()      ORDER BY last_update ASC LIMIT " + maxEventsToUpdate;
