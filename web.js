@@ -91,7 +91,7 @@ function shouldIUpdate(last_update, minutes) {
 
 function doAnUpdate(token, cb) {
     executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {
-        console.log("res":+results);
+        console.log("res:"+results);
         insertEventsIntoDb(results.data, cb, token);
     });
 }
