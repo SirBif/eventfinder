@@ -91,7 +91,7 @@ function shouldIUpdate(last_update, minutes) {
 
 function doAnUpdate(token, cb) {
     executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {
-        console.log(results);
+        console.log("res":+results);
         insertEventsIntoDb(results.data, cb, token);
     });
 }
@@ -118,7 +118,8 @@ function executeFbQuery(query, token, cb) {
             if(theData == undefined) {
                 console.log('Data undefined');
             } else if(theData.error == undefined) {
-                //console.log('Data Retrieved');
+                console.log('Data Retrieved');
+                console.log(theData);
                 cb(theData);
             } else {
                 console.log('FB query ended with error: '+ JSON.stringify(theData));   
