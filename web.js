@@ -363,7 +363,11 @@ function executeFbQuery_HeadOnly(query, token, cb) {
 }
 
 function getNumberOfElements(size) {
-   return Math.floor((size - 10) / 12);
+   var number = (size - 10) / 12;
+   if(number === parseInt(number)) {
+     return number;
+   }
+   return null;
 }
 
 app.get('/update', function (req, res) {
