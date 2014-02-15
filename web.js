@@ -19,8 +19,8 @@ var app = express.createServer(serverOptions);
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
-var fetchListOfEventsEveryXHours = 0;
-var numberOfEventsToRetrieve = 20;
+var fetchListOfEventsEveryXHours = 6;
+var numberOfEventsToRetrieve = 30;
 var parallelAsyncHttpRequests = 5;
 
 app.configure(function () {
@@ -103,6 +103,7 @@ function executeFbQuery(query, token, cb) {
         method: 'GET',
         agent: false
     };
+    console.log(options.path);
     
     var req = https.request(options, function (result) {
         var data = [];
@@ -356,7 +357,10 @@ function executeFbQuery_HeadOnly(query, token, cb) {
         var header = response.headers;
         response.destroy();        
         var elements = getNumberOfElements(header['content-length']);
-        console.log("Size: "+elements);
+        //console.log("Size: "+elements);
+        if(elements == null) {
+            console.log(header);   
+        }
         cb(elements);
     });
     myReq.end();

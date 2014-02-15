@@ -19,20 +19,20 @@ var app = express.createServer(serverOptions);
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
-var fetchListOfEventsEveryXHours = 6;
+var fetchListOfEventsEveryXHours = 0;
 var numberOfEventsToRetrieve = 20;
 var parallelAsyncHttpRequests = 5;
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
     app.use(express.compress());
-	app.use(express.bodyParser());
-	app.use(express.cookieParser());
-	app.set('title', 'Event Finder');
-	app.use("/js", express.static(__dirname + '/js'));
-	app.use("/css", express.static(__dirname + '/css'));
-	app.use("/misc", express.static(__dirname + '/misc'));
-	app.register('.html', require('ejs'));
+    app.use(express.bodyParser());
+    app.use(express.cookieParser());
+    app.set('title', 'Event Finder');
+    app.use("/js", express.static(__dirname + '/js'));
+    app.use("/css", express.static(__dirname + '/css'));
+    app.use("/misc", express.static(__dirname + '/misc'));
+    app.register('.html', require('ejs'));
     app.set('views',__dirname+'/views');
 });
 
@@ -42,7 +42,7 @@ app.listen(port, function() {
 });
 
 app.all('/', function (req, res, next) {
-	res.render('index.html', {layout: false});
+    res.render('index.html', {layout: false});
 });
 
 app.get('/login', function (req, res, next) {
@@ -64,22 +64,22 @@ app.get('/login', function (req, res, next) {
 
 function fetchUserInfo(uid, cb) {
     var FacebookUser = Parse.Object.extend("FacebookUser");
-	var query = new Parse.Query(FacebookUser);
-	query.equalTo("uid", uid);
-	query.first().then(function(userInfo) {cb(userInfo);});
+    var query = new Parse.Query(FacebookUser);
+    query.equalTo("uid", uid);
+    query.first().then(function(userInfo) {cb(userInfo);});
 }
 
 function updateIfNeeded(userInfo, accessToken) {
-	if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
-		console.log('Updating user ' + userInfo.get("uid"));
-		doAnUpdate(accessToken, function() {
-		    userInfo.set("last_update", new Date());
-	        userInfo.save();
-	     });
-	} else {
-	    //console.log('No need to update events from uid ' + uid);
-	    userInfo.save();
-	}
+    if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
+        console.log('Updating user ' + userInfo.get("uid"));
+        doAnUpdate(accessToken, function() {
+            userInfo.set("last_update", new Date());
+            userInfo.save();
+         });
+    } else {
+        //console.log('No need to update events from uid ' + uid);
+        userInfo.save();
+    }
 }
 
 function shouldIUpdate(last_update, minutes) {
@@ -90,22 +90,25 @@ function shouldIUpdate(last_update, minutes) {
 }
 
 function doAnUpdate(token, cb) {
-	executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {insertEventsIntoDb(results.data, cb, token);});
+    executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {
+        insertEventsIntoDb(results.data, cb, token);
+    });
 }
 
 function executeFbQuery(query, token, cb) {
-	var options = {
-		hostname: 'graph.facebook.com',
-		port: 443,
-		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-		method: 'GET',
-		agent: false
-	};
-	
+    var options = {
+        hostname: 'graph.facebook.com',
+        port: 443,
+        path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
+        method: 'GET',
+        agent: false
+    };
+    console.log(options.path);
+    
     var req = https.request(options, function (result) {
         var data = [];
         result.on('data', function (d) {
-	        data.push(d);
+            data.push(d);
         });
         result.on('error', function (err) {
             console.log('Error: ' + err);
@@ -123,12 +126,6 @@ function executeFbQuery(query, token, cb) {
         });
     });
     req.end();
-}
-
-function insertEventsIntoDb(data, cb) {
-    getAToken(function(theToken) {
-        asyncInsert(data, theToken, cb);
-    });
 }
 
 function insertEventsIntoDb(data, cb, theToken) {
@@ -184,7 +181,7 @@ function retrieveEventInfo(eid, tok, cb) {
                     "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
                     "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
                 "}";    
-	executeFbQuery(query, tok, cb);
+    executeFbQuery(query, tok, cb);
 }
 
 function writeSingleUpdateToDb(fbData, number, eid, cb) {
@@ -342,32 +339,39 @@ function asyncRetrieve(eventRows, token) {
 function retrieveEventGirls(eid, tok, cb) {
     //console.log('Contacting FB to retrieve info about event ' + eid);
     query = "select '' from user where sex = 'female' and uid in (select uid from event_member where eid ='"+eid+"' and rsvp_status = 'attending')";
-	executeFbQuery_HeadOnly(query, tok, cb);
+    executeFbQuery_HeadOnly(query, tok, cb);
 }
 
 function executeFbQuery_HeadOnly(query, token, cb) {
-	var options = {
-		host: 'graph.facebook.com',
-		port: 443,
-		path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-		method: 'GET',
-		headers: {
-		    'Accept-Encoding': 'identity',
-		    'agent': false
-		}
-	};
+    var options = {
+        host: 'graph.facebook.com',
+        port: 443,
+        path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
+        method: 'GET',
+        headers: {
+            'Accept-Encoding': 'identity',
+            'agent': false
+        }
+    };
     var myReq = https.request(options, function (response) {
         var header = response.headers;
         response.destroy();        
         var elements = getNumberOfElements(header['content-length']);
-        console.log("Size: "+elements);
+        //console.log("Size: "+elements);
+        if(elements == null) {
+            console.log(header);   
+        }
         cb(elements);
     });
     myReq.end();
 }
 
 function getNumberOfElements(size) {
-   return Math.floor((size - 10) / 12);
+   var number = (size - 10) / 12;
+   if(number === parseInt(number)) {
+     return number;
+   }
+   return null;
 }
 
 app.get('/update', function (req, res) {
