@@ -103,6 +103,7 @@ function executeFbQuery(query, token, cb) {
         method: 'GET',
         agent: false
     };
+    console.log(options.path);
     
     var req = https.request(options, function (result) {
         var data = [];
