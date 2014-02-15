@@ -19,7 +19,7 @@ var app = express.createServer(serverOptions);
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
-var fetchListOfEventsEveryXHours = 6;
+var fetchListOfEventsEveryXHours = 0;
 var numberOfEventsToRetrieve = 20;
 var parallelAsyncHttpRequests = 5;
 
@@ -112,12 +112,14 @@ function executeFbQuery(query, token, cb) {
         });
         result.on('end', function() {
             var theData = JSON.parse(data.join(''));
-            if(theData.error == undefined) {
-                //console.log('Data Retrieved');
+            if(theData == undefined) {
+                console.log('Data undefined');
+            } else if(theData.error == undefined && theData.error_code == undefined) {
+                console.log('Data Retrieved');
                 cb(theData);
-	        } else {
-	            console.log('FB query ended with error: '+ JSON.stringify(theData));   
-	        }
+            } else {
+                console.log('FB query ended with error: '+ JSON.stringify(theData));   
+            }
         });
     });
     req.end();

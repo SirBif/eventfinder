@@ -112,12 +112,14 @@ function executeFbQuery(query, token, cb) {
         });
         result.on('end', function() {
             var theData = JSON.parse(data.join(''));
-            if(theData.error == undefined) {
-                //console.log('Data Retrieved');
+            if(theData == undefined) {
+                console.log('Data undefined');
+            } else if(theData.error == undefined && theData.error_code == undefined) {
+                console.log('Data Retrieved');
                 cb(theData);
-	        } else {
-	            console.log('FB query ended with error: '+ JSON.stringify(theData));   
-	        }
+            } else {
+                console.log('FB query ended with error: '+ JSON.stringify(theData));   
+            }
         });
     });
     req.end();
@@ -365,7 +367,7 @@ function executeFbQuery_HeadOnly(query, token, cb) {
 }
 
 function getNumberOfElements(size) {
-   return Math.floor(size - 10) / 12);
+   return Math.floor((size - 10) / 12);
 }
 
 app.get('/update', function (req, res) {
