@@ -19,9 +19,8 @@ var app = express.createServer(serverOptions);
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
-var fetchListOfEventsEveryXHours = 0;
-var numberOfEventsToRetrieve = 20;
-var parallelAsyncHttpRequests = 5;
+var fetchListOfEventsEveryXHours = 1;
+var parallelAsyncHttpRequests = 7;
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
@@ -90,7 +89,7 @@ function shouldIUpdate(last_update, minutes) {
 }
 
 function doAnUpdate(token, cb) {
-    executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {
+    executeFbQuery(QUERY.FB_EVENTS_TO_INSERT(), token, function(results) {
         insertEventsIntoDb(results.data, cb, token);
     });
 }
@@ -175,13 +174,8 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
     });
 }
 
-function retrieveEventInfo(eid, tok, cb) {
-    //console.log('Retrieving info about event ' + eid);
-    var query = "{"+
-                    "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
-                    "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
-                "}";    
-    executeFbQuery(query, tok, cb);
+function retrieveEventInfo(eid, tok, cb) {    
+    executeFbQuery(QUERY.FB_RETRIEVE_EVENT_INFO(eid), tok, cb);
 }
 
 function writeSingleUpdateToDb(fbData, number, eid, cb) {
@@ -231,7 +225,7 @@ function updateIntoDb(querySql, data, cb) {
 }
 
 app.get('/retrieve', function (req, res, next) {
-    console.log('Retrieve');
+    //console.log('Retrieve');
     var bottomRightLat = req.query["bottomRightLat"];
     var bottomRightLon = req.query["bottomRightLon"];
     var topLeftLat = req.query["topLeftLat"];
@@ -264,8 +258,7 @@ function retrieveEventsInBox(bottomRight, topLeft, start, end, cb) {
             bottomRight.longitude,
             topLeft.longitude,
             moment(start),
-            moment(end),
-            numberOfEventsToRetrieve
+            moment(end)
         ],
         cb
     );
@@ -357,10 +350,6 @@ function executeFbQuery_HeadOnly(query, token, cb) {
         var header = response.headers;
         response.destroy();        
         var elements = getNumberOfElements(header['content-length']);
-        //console.log("Size: "+elements);
-        if(elements == null) {
-            console.log(header);   
-        }
         cb(elements);
     });
     myReq.end();
@@ -371,7 +360,7 @@ function getNumberOfElements(size) {
    if(number === parseInt(number)) {
      return number;
    }
-   return null;
+   return null;//event has private guest list
 }
 
 app.get('/update', function (req, res) {

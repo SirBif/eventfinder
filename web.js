@@ -20,7 +20,6 @@ var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var fetchListOfEventsEveryXHours = 1;
-var numberOfEventsToRetrieve = 30;
 var parallelAsyncHttpRequests = 7;
 
 app.configure(function () {
@@ -77,7 +76,6 @@ function updateIfNeeded(userInfo, accessToken) {
             userInfo.save();
          });
     } else {
-        //console.log('No need to update events from uid ' + uid);
         userInfo.save();
     }
 }
@@ -90,7 +88,7 @@ function shouldIUpdate(last_update, minutes) {
 }
 
 function doAnUpdate(token, cb) {
-    executeFbQuery(QUERY.FB_EVENTS_TO_UPDATE(), token, function(results) {
+    executeFbQuery(QUERY.FB_EVENTS_TO_INSERT(), token, function(results) {
         insertEventsIntoDb(results.data, cb, token);
     });
 }
@@ -165,7 +163,6 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
     query.on('end', function(result) {
         done();
         if(result != undefined) {
-            //console.log('Adding event ' + eid);
             retrieveEventInfo(eid, token, function(fbData) {
                 retrieveEventGirls(eid, token, function(number) {
                     writeSingleUpdateToDb(fbData, number, eid, cb);
@@ -175,17 +172,11 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
     });
 }
 
-function retrieveEventInfo(eid, tok, cb) {
-    //console.log('Retrieving info about event ' + eid);
-    var query = "{"+
-                    "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
-                    "\"thevenue\":\"select location.latitude, location.longitude from page where page_id in (select venue.id from #theevent )\"" + 
-                "}";    
-    executeFbQuery(query, tok, cb);
+function retrieveEventInfo(eid, tok, cb) {    
+    executeFbQuery(QUERY.FB_RETRIEVE_EVENT_INFO(eid), tok, cb);
 }
 
 function writeSingleUpdateToDb(fbData, number, eid, cb) {
-    //console.log('Retrieved fields for event ' + eid);
     try{
         var data = fbData.data;
         var eventData = [
@@ -225,13 +216,11 @@ function updateIntoDb(querySql, data, cb) {
         query.on('end', function(result) {
             done();
             cb();
-            //console.log('Saved');
         });
     });
 }
 
 app.get('/retrieve', function (req, res, next) {
-    console.log('Retrieve');
     var bottomRightLat = req.query["bottomRightLat"];
     var bottomRightLon = req.query["bottomRightLon"];
     var topLeftLat = req.query["topLeftLat"];
@@ -264,8 +253,7 @@ function retrieveEventsInBox(bottomRight, topLeft, start, end, cb) {
             bottomRight.longitude,
             topLeft.longitude,
             moment(start),
-            moment(end),
-            numberOfEventsToRetrieve
+            moment(end)
         ],
         cb
     );
@@ -314,7 +302,6 @@ function executeQuery(queryString, cb) {
 };
 
 function retrieveEventsToUpdate(cb) {
-    //console.log('Retrieving events to update');
     executeQuery(QUERY.EVENTS_TO_UPDATE(), cb);
 };
 
@@ -337,9 +324,7 @@ function asyncRetrieve(eventRows, token) {
 }
 
 function retrieveEventGirls(eid, tok, cb) {
-    //console.log('Contacting FB to retrieve info about event ' + eid);
-    query = "select '' from user where sex = 'female' and uid in (select uid from event_member where eid ='"+eid+"' and rsvp_status = 'attending')";
-    executeFbQuery_HeadOnly(query, tok, cb);
+    executeFbQuery_HeadOnly(QUERY.FB_RETRIEVE_EVENT_GIRLS(eid), tok, cb);
 }
 
 function executeFbQuery_HeadOnly(query, token, cb) {
@@ -357,10 +342,6 @@ function executeFbQuery_HeadOnly(query, token, cb) {
         var header = response.headers;
         response.destroy();        
         var elements = getNumberOfElements(header['content-length']);
-        //console.log("Size: "+elements);
-        if(elements == null) {
-            console.log(header);   
-        }
         cb(elements);
     });
     myReq.end();
@@ -371,7 +352,7 @@ function getNumberOfElements(size) {
    if(number === parseInt(number)) {
      return number;
    }
-   return null;
+   return null;//event has a hidden guest list
 }
 
 app.get('/update', function (req, res) {
@@ -394,7 +375,6 @@ function executeBatchUpdate() {
 }
 
 function getAToken(cb) {
-    //console.log('Retrieving new token from Parse');
     var FacebookUser = Parse.Object.extend("FacebookUser");
     var query = new Parse.Query(FacebookUser);
     query.descending("updatedAt")
