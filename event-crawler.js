@@ -3,6 +3,15 @@ var last_check;
 var mysql = require('mysql');
 var locationDistanceRadius = 10000;
 
+/*
+//var fs = require('fs');
+var serverOptions = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+var app = express.createServer(serverOptions);
+*/
+
 var pool = mysql.createPool(process.env.CLEARDB_DATABASE_URL);
 
 //crawler version

@@ -1,25 +1,16 @@
 var express = require('express');
 var util    = require('util');
-var https = require('https');
 var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
 var pg = require('pg');
 var QUERY = require("./web-queries");
+var fb = require("./fbQuery").getFbQuery();
 
-https.globalAgent.maxSockets = 80;
-/*
-//var fs = require('fs');
-var serverOptions = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
-};
-var app = express.createServer(serverOptions);
-*/
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
-var fetchListOfEventsEveryXHours = 1;
+var fetchListOfEventsEveryXHours = 0;
 var parallelAsyncHttpRequests = 7;
 
 app.configure(function () {
@@ -47,6 +38,7 @@ app.all('/', function (req, res, next) {
 app.get('/login', function (req, res, next) {
     var uid = req.query["uid"];
     var accessToken = req.query["token"];
+    fb.setToken(accessToken);
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
     console.log('Login from uid ' + uid);
@@ -57,7 +49,7 @@ app.get('/login', function (req, res, next) {
             userInfo.set("uid", uid);
         }
         userInfo.set("token", accessToken);
-        updateIfNeeded(userInfo, accessToken);
+        updateIfNeeded(userInfo);
     });
 });
 
@@ -68,10 +60,10 @@ function fetchUserInfo(uid, cb) {
     query.first().then(function(userInfo) {cb(userInfo);});
 }
 
-function updateIfNeeded(userInfo, accessToken) {
+function updateIfNeeded(userInfo) {
     if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
         console.log('Updating user ' + userInfo.get("uid"));
-        doAnUpdate(accessToken, function() {
+        doAnUpdate(function() {
             userInfo.set("last_update", new Date());
             userInfo.save();
          });
@@ -87,57 +79,24 @@ function shouldIUpdate(last_update, minutes) {
     return false;   
 }
 
-function doAnUpdate(token, cb) {
-    executeFbQuery(QUERY.FB_EVENTS_TO_INSERT(), token, function(results) {
-        insertEventsIntoDb(results.data, cb, token);
+function doAnUpdate(cb) {
+    fb.queryForEvents(function(results) {
+        insertEventsIntoDb(results.data, cb);
     });
 }
 
-function executeFbQuery(query, token, cb) {
-    var options = {
-        hostname: 'graph.facebook.com',
-        port: 443,
-        path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-        method: 'GET',
-        agent: false
-    };
-    console.log(options.path);
-    
-    var req = https.request(options, function (result) {
-        var data = [];
-        result.on('data', function (d) {
-            data.push(d);
-        });
-        result.on('error', function (err) {
-            console.log('Error: ' + err);
-        });
-        result.on('end', function() {
-            var theData = JSON.parse(data.join(''));
-            if(theData == undefined) {
-                console.log('Data undefined');
-            } else if(theData.error == undefined && theData.error_code == undefined) {
-                console.log('Data Retrieved');
-                cb(theData);
-            } else {
-                console.log('FB query ended with error: '+ JSON.stringify(theData));   
-            }
-        });
-    });
-    req.end();
+function insertEventsIntoDb(data, cb) {
+    asyncInsert(data, cb);
 }
 
-function insertEventsIntoDb(data, cb, theToken) {
-    asyncInsert(data, theToken, cb);
-}
-
-function asyncInsert(eventIds, token, cb) {
+function asyncInsert(eventIds, cb) {
     async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, cb) {
         pg.connect(process.env.DATABASE_URL, function(error, client, done) {
             if(error) {
                 return;
             }
             if(eventRow.eid != undefined) {
-                doQuery(client, token, QUERY.ADD_EVENT_QUERY(), eventRow.eid, eventRow.start_time, done, cb);
+                doQuery(client, QUERY.ADD_EVENT_QUERY(), eventRow.eid, eventRow.start_time, done, cb);
             } else {
                 done();
                 cb();
@@ -151,7 +110,7 @@ function asyncInsert(eventIds, token, cb) {
     });
 }
 
-function doQuery(client, token, querySql, eid, start_time, done, cb) {
+function doQuery(client, querySql, eid, start_time, done, cb) {
     var query = client.query(querySql, [eid, start_time]);
     query.on('error', function(error) {
         done();
@@ -163,17 +122,13 @@ function doQuery(client, token, querySql, eid, start_time, done, cb) {
     query.on('end', function(result) {
         done();
         if(result != undefined) {
-            retrieveEventInfo(eid, token, function(fbData) {
-                retrieveEventGirls(eid, token, function(number) {
+            fb.retrieveEventInfo(eid, function(fbData) {
+                fb.retrieveEventGirls(eid, function(number) {
                     writeSingleUpdateToDb(fbData, number, eid, cb);
                 });
             });
         }
     });
-}
-
-function retrieveEventInfo(eid, tok, cb) {    
-    executeFbQuery(QUERY.FB_RETRIEVE_EVENT_INFO(eid), tok, cb);
 }
 
 function writeSingleUpdateToDb(fbData, number, eid, cb) {
@@ -305,11 +260,11 @@ function retrieveEventsToUpdate(cb) {
     executeQuery(QUERY.EVENTS_TO_UPDATE(), cb);
 };
 
-function asyncRetrieve(eventRows, token) {
+function asyncRetrieve(eventRows) {
     async.eachLimit(eventRows, parallelAsyncHttpRequests, function(eventRow, cb) {
         var eid = eventRow.eid;
-        retrieveEventInfo(eid, token, function(fbData) {
-            retrieveEventGirls(eid, token, function(number) {
+        fb.retrieveEventInfo(eid, function(fbData) {
+            fb.retrieveEventGirls(eid, function(number) {
                 writeSingleUpdateToDb(fbData, number, eid, cb);
             });
         });
@@ -323,38 +278,6 @@ function asyncRetrieve(eventRows, token) {
     });
 }
 
-function retrieveEventGirls(eid, tok, cb) {
-    executeFbQuery_HeadOnly(QUERY.FB_RETRIEVE_EVENT_GIRLS(eid), tok, cb);
-}
-
-function executeFbQuery_HeadOnly(query, token, cb) {
-    var options = {
-        host: 'graph.facebook.com',
-        port: 443,
-        path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
-        method: 'GET',
-        headers: {
-            'Accept-Encoding': 'identity',
-            'agent': false
-        }
-    };
-    var myReq = https.request(options, function (response) {
-        var header = response.headers;
-        response.destroy();        
-        var elements = getNumberOfElements(header['content-length']);
-        cb(elements);
-    });
-    myReq.end();
-}
-
-function getNumberOfElements(size) {
-   var number = (size - 10) / 12;
-   if(number === parseInt(number)) {
-     return number;
-   }
-   return null;//event has a hidden guest list
-}
-
 app.get('/update', function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
@@ -366,7 +289,10 @@ function executeBatchUpdate() {
         retrieveEventsToUpdate(function(eventRows) {
             if(eventRows.length > 0) {
                 console.log('Number of events to update: ' + eventRows.length);
-                getAToken(function(token) {asyncRetrieve(eventRows, token);});
+                getAToken(function(token) {
+                    fb.setToken(token);
+                    asyncRetrieve(eventRows);
+                });
             } else {
                 console.log("No need to update the events data");
             }
