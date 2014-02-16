@@ -1,5 +1,5 @@
 module.exports = {
-	getFbAdapter : function(https){ return new fbAdapter(https);} 
+	getFbAdapter : function(){ return new fbAdapter();} 
 };
 
 var https = require('https');
