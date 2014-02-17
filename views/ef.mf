@@ -1,0 +1,15 @@
+CACHE MANIFEST
+# 2014-02-16:v0
+
+# Explicitly cached 'master entries'.
+CACHE:
+misc/favicon.ico
+misc/channel.html
+views/index.html
+css/style.css
+css/jquery.sidr.light.css
+js/jhere.min.js
+js/jquery.sidr.min.js
+# Resources that require the user to be online.
+NETWORK:
+*

@@ -67,8 +67,7 @@ function updateMarkers() {
     requestString += "&end=" + endDate.format();
     $.get(requestString, {}).then(function(resultsJson) {
         printResults(resultsJson);
-    });
-    
+    });    
 }
 
 function handleLogin() {
@@ -95,9 +94,19 @@ function handleLogin() {
                 //we load the markers for the 1st time
                 updateMarkers();
             });
-            $.get("/login", {uid: uid, token : accessToken});
+            retrieveFbEvents(function(results) {
+                console.log("login");
+                $.post("/login", {uid: uid, token : accessToken, data : results.data}, null, "json");
+            });
         }
     });
+}
+
+function retrieveFbEvents(cb) {
+    var eventLimitForFbQuery = 100;
+    var maxFriends = 300;
+    var query = "SELECT eid FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now()AND eid IN(SELECT eid FROM event_member WHERE start_time > now()AND(uid=me()OR uid IN(SELECT uid2 FROM friend WHERE uid1=me() LIMIT " + maxFriends+ "))ORDER BY start_time ASC LIMIT "+ eventLimitForFbQuery +")ORDER BY start_time ASC";
+    FB.api('/fql?q='+escape(query), 'get', cb);
 }
 
 function getContent(entry) {

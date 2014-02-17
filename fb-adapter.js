@@ -35,7 +35,7 @@ function fbAdapter() {
 	            if(theData == undefined) {
 	                console.log('Data undefined');
 	            } else if(theData.error == undefined && theData.error_code == undefined) {
-	                console.log('Data Retrieved');
+	                //console.log('Data Retrieved');
 	                cb(theData);
 	            } else {
 	                console.log('FB query ended with error: '+ JSON.stringify(theData));   
