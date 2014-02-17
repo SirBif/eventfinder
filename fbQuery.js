@@ -10,11 +10,6 @@ function fbQuery() {
 		this.fb.setToken(token);
 	}
 
-	this.queryForEvents=queryForEvents;
-	function queryForEvents(cb) {
-		this.fb.executeFbQuery(query_FB_EVENTS_TO_INSERT, cb);
-	}
-
 	this.retrieveEventInfo=retrieveEventInfo;
 	function retrieveEventInfo(eid, cb) {    
 	    this.fb.executeFbQuery(retrieveEventInfo_Query(eid), cb);
@@ -26,10 +21,6 @@ function fbQuery() {
 	        cb(getNumberOfElements(header['content-length']));
 	    });
 	}
-
-	var eventLimitForFbQuery = 100;
-	var maxFriends = 300;
-	var query_FB_EVENTS_TO_INSERT ="SELECT eid, start_time FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now()AND eid IN(SELECT eid FROM event_member WHERE start_time > now()AND(uid=me()OR uid IN(SELECT uid2 FROM friend WHERE uid1=me() LIMIT " + maxFriends+ "))ORDER BY start_time ASC LIMIT "+ eventLimitForFbQuery +")ORDER BY start_time ASC";
 
 	function retrieveEventInfo_Query(eid) {
 	    return "{"+

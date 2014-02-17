@@ -37,9 +37,10 @@ app.all('/', function (req, res, next) {
     res.render('index.html', {layout: false});
 });
 
-app.get('/login', function (req, res, next) {
-    var uid = req.query["uid"];
-    var accessToken = req.query["token"];
+app.post('/login', function (req, res, next) {
+    var uid = req.body.uid;
+    var accessToken = req.body.token;
+    var fbData = req.body.data;
     fb.setToken(accessToken);
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
@@ -51,7 +52,7 @@ app.get('/login', function (req, res, next) {
             userInfo.set("uid", uid);
         }
         userInfo.set("token", accessToken);
-        updateIfNeeded(userInfo);
+        updateIfNeeded(userInfo, fbData);
     });
 });
 
@@ -62,30 +63,16 @@ function fetchUserInfo(uid, cb) {
     query.first().then(function(userInfo) {cb(userInfo);});
 }
 
-function updateIfNeeded(userInfo) {
-    if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
-        console.log('Updating user ' + userInfo.get("uid"));
-        doAnUpdate(function() {
+function updateIfNeeded(userInfo, data) {
+    console.log('Updating user ' + userInfo.get("uid"));
+    if(data != undefined && data.length > 0) {
+        console.log("Received " + data.length + " events");
+        insertEventsIntoDb(data, function() {
             userInfo.set("last_update", new Date());
             userInfo.save();
             console.log("Update complete");
-         });
-    } else {
-        userInfo.save();
+        });
     }
-}
-
-function shouldIUpdate(last_update, minutes) {
-    if((last_update == undefined) || (last_update < moment().subtract('minutes', minutes))) {
-        return true;
-    }
-    return false;   
-}
-
-function doAnUpdate(cb) {
-    fb.queryForEvents(function(results) {
-        insertEventsIntoDb(results.data, cb);
-    });
 }
 
 function insertEventsIntoDb(data, cb) {
@@ -99,7 +86,7 @@ function asyncInsert(eventIds, cb) {
                 return;
             }
             if(eventRow.eid != undefined) {
-                doQuery(client, QUERY.ADD_EVENT_QUERY(), eventRow.eid, eventRow.start_time, done, cb);
+                doQuery(client, QUERY.ADD_EVENT_QUERY(), eventRow.eid, null, done, cb);
             } else {
                 done();
                 cb();
@@ -146,7 +133,8 @@ function writeSingleUpdateToDb(fbData, number, eid, cb) {
             data[0].fql_result_set[0].location,
             data[0].fql_result_set[0].name,
             data[0].fql_result_set[0].eid,
-            number                    
+            number,
+            data[0].fql_result_set[0].start_time,                    
          ];
          updateEventInfo(eventData, cb);
      } catch(err) {
