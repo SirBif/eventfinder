@@ -7,6 +7,8 @@ var pg = require('pg');
 var QUERY = require("./web-queries");
 var fb = require("./fbQuery").getFbQuery();
 
+express.static.mime.define({'text/cache-manifest': ['mf']});
+
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
@@ -66,6 +68,7 @@ function updateIfNeeded(userInfo) {
         doAnUpdate(function() {
             userInfo.set("last_update", new Date());
             userInfo.save();
+            console.log("Update complete");
          });
     } else {
         userInfo.save();
@@ -292,6 +295,7 @@ function executeBatchUpdate() {
                 getAToken(function(token) {
                     fb.setToken(token);
                     asyncRetrieve(eventRows);
+                    console.log("Update complete");
                 });
             } else {
                 console.log("No need to update the events data");
