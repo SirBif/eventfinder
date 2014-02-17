@@ -117,7 +117,7 @@ function getContent(entry) {
     result += "<tr><td>Location: " + entry.location + '</td></tr>';
     result += "<tr><td>Going: " + entry.people;
     if(entry.female_participants != null) {
-        result += '('+entry.female_participants+')';
+        result += ' (M/F: '+(entry.people - entry.female_participants)+"/"+(entry.female_participants)+')';
     }
     result +='</td></tr>';
     result += '</table>';
