@@ -12,7 +12,6 @@ express.static.mime.define({'text/cache-manifest': ['mf']});
 var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
-var fetchListOfEventsEveryXHours = 0;
 var parallelAsyncHttpRequests = 7;
 
 app.configure(function () {
