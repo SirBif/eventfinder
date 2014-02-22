@@ -8,7 +8,7 @@ function dbAdapter(dbUrl) {
 }
 
 dbAdapter.prototype.addEvent = function(eventRow, cb) {
-    this.insertQuery(
+    this.insertUpdateQuery(
     	"INSERT INTO events(eid, start_date)values($1, $2);",
     	[eventRow.eid, null],
     	function(result) {
@@ -23,7 +23,41 @@ dbAdapter.prototype.addEvent = function(eventRow, cb) {
 	);
 };
 
-dbAdapter.prototype.insertQuery = function(querySql, parameters, endCb, errorCb) {
+dbAdapter.prototype.updateEventInfo = function(data, cb) {
+    this.insertUpdateQuery(
+        "UPDATE events SET end_date=$1, attending_total=$2, maybe_total=$3, latitude=$4, longitude=$5, location=left($6, 100), name=left($7, 100), last_update = now(), attending_f=$9 , start_date=$10 WHERE eid = $8;",
+        data,
+        function(result) {
+            cb();
+        },
+        function(error) {
+            if(error.code != 23505) { //ignore the error "it's already present"
+                cb(error);
+                return;
+            }
+        }
+    );
+};
+
+dbAdapter.prototype.cleanOldEvents = function(cb) {
+    var hoursInThePast = 48;
+    var query = "DELETE FROM events WHERE(start_date < now()- interval '"+hoursInThePast+" hours' AND end_date IS NULL)OR(end_date < now());";
+    this.insertUpdateQuery(
+        query,
+        [],
+        function(result) {
+            cb();
+        },
+        function(error) {
+            if(error.code != 23505) { //ignore the error "it's already present"
+                cb(error);
+                return;
+            }
+        }
+    );
+};
+
+dbAdapter.prototype.insertUpdateQuery = function(querySql, parameters, endCb, errorCb) {
 	var db = this;
 	db.pg.connect(db.dbUrl, function(error, client, done) {
         if(error) {

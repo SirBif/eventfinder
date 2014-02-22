@@ -104,34 +104,10 @@ function writeSingleUpdateToDb(fbData, number, eid, cb) {
             number,
             data[0].fql_result_set[0].start_time,                    
          ];
-         updateEventInfo(eventData, cb);
+         db.updateEventInfo(eventData, cb);
      } catch(err) {
         cb(err);
      }
-}
-
-function updateEventInfo(eventData, cb) {
-    updateIntoDb(QUERY.UPDATE_EVENT_INFO(), eventData, cb);
-}
-
-function updateIntoDb(querySql, data, cb) {
-    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
-        if(error) {
-            console.log(error);
-            cb();
-            return;
-        }
-        var query = client.query(querySql, data);
-        query.on('error', function(error) {  
-            done();
-            cb();    
-            console.log(error);
-        });
-        query.on('end', function(result) {
-            done();
-            cb();
-        });
-    });
 }
 
 app.get('/retrieve', function (req, res, next) {
@@ -179,7 +155,7 @@ app.get('/update', function (req, res) {
 });
 
 function executeBatchUpdate() {
-    executeQuery(QUERY.CLEAN_OLD_EVENTS_QUERY(), function(nvm) {
+    db.cleanOldEvents(function() {
         db.retrieveEventsToUpdate(function(eventRows) {
             if(eventRows.length > 0) {
                 console.log('Number of events to update: ' + eventRows.length);
