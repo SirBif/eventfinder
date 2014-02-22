@@ -92,7 +92,7 @@ function asyncInsert(eventIds, asyncCompleteCb) {
 function writeSingleUpdateToDb(fbData, number, eid, cb) {
     try{
         var data = fbData.data;
-        if(data[0].fql_result_set[0].name == undefined) {
+        if(data[0].fql_result_set[0] == undefined) {
             cb();
             return;
         }
