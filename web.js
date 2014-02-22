@@ -83,8 +83,8 @@ function asyncInsert(eventIds, asyncCompleteCb) {
             if (err) {
                 console.log('Insert problem:' + err);
             } else {
-                asyncCompleteCb();
-            }
+                asyncCompleteCb(); 
+           }
         }
     );
 }
@@ -92,6 +92,8 @@ function asyncInsert(eventIds, asyncCompleteCb) {
 function writeSingleUpdateToDb(fbData, number, eid, cb) {
     try{
         var data = fbData.data;
+        console.log(eid);
+        console.log(JSON.stringify(data));
         var eventData = [
             data[0].fql_result_set[0].end_time,
             data[0].fql_result_set[0].attending_count,
