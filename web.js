@@ -3,9 +3,8 @@ var util    = require('util');
 var Parse = require('parse').Parse;
 var moment = require('moment');
 var async = require('async');
-var pg = require('pg');
-var QUERY = require("./web-queries");
 var fb = require("./fbQuery").getFbQuery();
+var db = require("./db-adapter").getDb(process.env.DATABASE_URL);
 
 express.static.mime.define({'text/cache-manifest': ['mf']});
 
@@ -69,55 +68,25 @@ function updateIfNeeded(userInfo, data) {
         insertEventsIntoDb(data, function() {
             userInfo.set("last_update", new Date());
             userInfo.save();
-            console.log("Update complete");
+            console.log("Update user complete");
         });
     }
 }
 
-function insertEventsIntoDb(data, cb) {
-    asyncInsert(data, cb);
+function insertEventsIntoDb(data, insertCb) {
+    asyncInsert(data, insertCb);
 }
 
-function asyncInsert(eventIds, cb) {
-    async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, cb) {
-        pg.connect(process.env.DATABASE_URL, function(error, client, done) {
-            if(error) {
-                return;
-            }
-            if(eventRow.eid != undefined) {
-                doQuery(client, QUERY.ADD_EVENT_QUERY(), eventRow.eid, null, done, cb);
+function asyncInsert(eventIds, asyncCompleteCb) {
+    async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, asyncCb) {db.addEvent(eventRow, asyncCb);},
+        function(err) {
+            if (err) {
+                console.log('Insert problem:' + err);
             } else {
-                done();
-                cb();
+                asyncCompleteCb();
             }
-        });
-    }, function(err) {
-        if (err) {
-            console.log('Insert problem:' +err);
         }
-        cb();
-    });
-}
-
-function doQuery(client, querySql, eid, start_time, done, cb) {
-    var query = client.query(querySql, [eid, start_time]);
-    query.on('error', function(error) {
-        done();
-        cb();
-        if(error.code != 23505) { //ignore the error "it's already present"
-            console.log(error);
-        }        
-    });
-    query.on('end', function(result) {
-        done();
-        if(result != undefined) {
-            fb.retrieveEventInfo(eid, function(fbData) {
-                fb.retrieveEventGirls(eid, function(number) {
-                    writeSingleUpdateToDb(fbData, number, eid, cb);
-                });
-            });
-        }
-    });
+    );
 }
 
 function writeSingleUpdateToDb(fbData, number, eid, cb) {
@@ -172,7 +141,7 @@ app.get('/retrieve', function (req, res, next) {
     var topLeftLon = req.query["topLeftLon"];
     var start_time = req.query["start"];
     var end_time = req.query["end"];
-    retrieveEventsInBox(
+    db.retrieveEventsInBox(
         {
             'latitude':bottomRightLat,
             'longitude':bottomRightLon
@@ -180,75 +149,13 @@ app.get('/retrieve', function (req, res, next) {
             'latitude':topLeftLat,
             'longitude':topLeftLon
         },
-        start_time,
-        end_time,
+        moment(start_time),
+        moment(end_time),
         function(rows) {
             res.json(rows);
         }
     );
 });
-
-function retrieveEventsInBox(bottomRight, topLeft, start, end, cb) {
-    executePS(
-        'retrieveEventsPs',
-        QUERY.RETRIEVE_EVENTS_QUERY(),
-        [
-            bottomRight.latitude,
-            topLeft.latitude,
-            bottomRight.longitude,
-            topLeft.longitude,
-            moment(start),
-            moment(end)
-        ],
-        cb
-    );
-}
-
-function executePS(name, queryString, params, cb) {
-    var results = [];
-    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
-        if(error) {
-            console.log(error);
-            return;
-        }
-        var query = client.query({ name: name, text: queryString, values: params });
-        query.on('error', function(error) {
-            console.log(error);
-        });
-        query.on('row', function(row) {
-            results.push(row);
-        });
-        query.on('end', function(result) {
-            done();
-            cb(results); 
-        });
-    });
-}
-
-function executeQuery(queryString, cb) {
-    var results = [];
-    pg.connect(process.env.DATABASE_URL, function(error, client, done) {
-        if(error) {
-            console.log(error);
-            return;
-        }
-        var query = client.query(queryString);
-        query.on('error', function(error) {
-            console.log(error);
-        });
-        query.on('row', function(row) {
-            results.push(row);
-        });
-        query.on('end', function(result) {
-            done();
-            cb(results); 
-        });
-    });
-};
-
-function retrieveEventsToUpdate(cb) {
-    executeQuery(QUERY.EVENTS_TO_UPDATE(), cb);
-};
 
 function asyncRetrieve(eventRows) {
     async.eachLimit(eventRows, parallelAsyncHttpRequests, function(eventRow, cb) {
@@ -261,9 +168,6 @@ function asyncRetrieve(eventRows) {
     }, function(err) {
         if (err) {
             console.log('Retrieve problem:' +err);
-        } else {
-          //doTheBigUpdate(); 
-          //what was I supposed to do here???
         }
     });
 }
@@ -276,7 +180,7 @@ app.get('/update', function (req, res) {
 
 function executeBatchUpdate() {
     executeQuery(QUERY.CLEAN_OLD_EVENTS_QUERY(), function(nvm) {
-        retrieveEventsToUpdate(function(eventRows) {
+        db.retrieveEventsToUpdate(function(eventRows) {
             if(eventRows.length > 0) {
                 console.log('Number of events to update: ' + eventRows.length);
                 getAToken(function(token) {
