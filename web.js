@@ -137,7 +137,7 @@ app.get('/retrieve', function (req, res, next) {
     );
 });
 
-function asyncRetrieve(eventRows) {
+function asyncRetrieve(eventRows, retrieveCompleteCb) {
     async.eachLimit(eventRows, parallelAsyncHttpRequests, function(eventRow, cb) {
         var eid = eventRow.eid;
         fb.retrieveEventInfo(eid, function(fbData) {
@@ -149,6 +149,7 @@ function asyncRetrieve(eventRows) {
         if (err) {
             console.log('Retrieve problem:' +err);
         }
+        retrieveCompleteCb();
     });
 }
 
@@ -165,8 +166,9 @@ function executeBatchUpdate() {
                 console.log('Number of events to update: ' + eventRows.length);
                 getAToken(function(token) {
                     fb.setToken(token);
-                    asyncRetrieve(eventRows);
-                    console.log("Update complete");
+                    asyncRetrieve(eventRows, function() {
+                        console.log("Update complete");
+                    });
                 });
             } else {
                 console.log("No need to update the events data");
