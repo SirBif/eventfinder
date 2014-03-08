@@ -34,8 +34,9 @@ window.fbAsyncInit = function() {
 
 var myLocation;
 (function() {
-    $.get("http://freegeoip.net/json/", {}).then(function(resultsJson) {
-        myLocation = [resultsJson.latitude, resultsJson.longitude];
+    $.get("http://freegeoip.net/json/", "json").then(function(resultsJson) {
+        var theJson = JSON.parse(resultsJson);
+        myLocation = [theJson.latitude, theJson.longitude];
     });
 }());
 
@@ -81,7 +82,7 @@ function handleLogin() {
             $('#mapContainer').jHERE({
                 enable: ['behavior', 'positioning', 'zoombar', 'scalebar'],
                 center: myLocation,
-                zoom: 9,
+                zoom: 8,
                 appId: '2555Yk0ixeYKXQe2OrXM',
                 authToken: 'E5I47YZhcJA7W9P6eIebEA'
             });
@@ -92,6 +93,7 @@ function handleLogin() {
             $('#mapContainer').jHERE('originalMap', function(map, here) {
                 map.addListener("mapviewchangeend", function() {updateMarkers();}, false);
                 //we load the markers for the 1st time
+                console.log(JSON.stringify($('#mapContainer').jHERE()));
                 updateMarkers();
             });
             retrieveFbEvents(function(results) {
