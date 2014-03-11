@@ -12,7 +12,7 @@ var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var parallelAsyncHttpRequests = 7;
-var fetchListOfEventsEveryXHours = 0;
+var fetchListOfEventsEveryXHours = 24;
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
