@@ -101,10 +101,7 @@ function handleLogin() {
                 console.log(JSON.stringify($('#mapContainer').jHERE()));
                 updateMarkers();
             });
-            retrieveFbEvents(function(results) {
-                console.log("login");
-                $.post("/login", {uid: uid, token : accessToken}, null, "json");
-            });
+            $.post("/login", {uid: uid, token : accessToken}, null, "json");
         }
     });
 }
