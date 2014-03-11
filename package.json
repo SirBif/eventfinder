@@ -3,13 +3,11 @@
   "version": "0.0.1",
   "dependencies": {
     "express":   "2.x",
-	"async":     "*",
+  	"async":     "*",
     "ejs":       "0.4.3",
-	"pg": "*",
-	"parse" : "*",
-	"moment" : "*",
-	"mysql" : "*"
-	
+  	"pg": "*",
+  	"parse" : "*",
+  	"moment" : "*",	
   },
   "engines": {
     "node": "0.8.23",
