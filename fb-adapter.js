@@ -14,10 +14,15 @@ function fbAdapter() {
 
 	this.executeFbQuery=executeFbQuery;
 	function executeFbQuery(query, cb) {
+	    return executeFbQueryWithSpecificToken(query, this.token, cb);
+	}
+
+	this.executeFbQueryWithSpecificToken=executeFbQueryWithSpecificToken;
+	function executeFbQueryWithSpecificToken(query, token, cb) {
 	    var options = {
 	        hostname: 'graph.facebook.com',
 	        port: 443,
-	        path: "/fql?q=" + escape(query) + "&access_token=" + escape(this.token),
+	        path: "/fql?q=" + escape(query) + "&access_token=" + escape(token),
 	        method: 'GET',
 	        agent: false
 	    };

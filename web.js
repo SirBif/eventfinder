@@ -12,6 +12,7 @@ var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var parallelAsyncHttpRequests = 7;
+var fetchListOfEventsEveryXHours = 0;
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
@@ -38,7 +39,6 @@ app.all('/', function (req, res, next) {
 app.post('/login', function (req, res, next) {
     var uid = req.body.uid;
     var accessToken = req.body.token;
-    var fbData = req.body.data;
     fb.setToken(accessToken);
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end();
@@ -49,8 +49,7 @@ app.post('/login', function (req, res, next) {
             userInfo = new FacebookUser();
             userInfo.set("uid", uid);
         }
-        userInfo.set("token", accessToken);
-        updateIfNeeded(userInfo, fbData);
+        updateIfNeeded(userInfo, accessToken);
     });
 });
 
@@ -61,16 +60,25 @@ function fetchUserInfo(uid, cb) {
     query.first().then(function(userInfo) {cb(userInfo);});
 }
 
-function updateIfNeeded(userInfo, data) {
-    console.log('Updating user ' + userInfo.get("uid"));
-    if(data != undefined && data.length > 0) {
-        console.log("Received " + data.length + " events");
-        insertEventsIntoDb(data, function() {
-            userInfo.set("last_update", new Date());
-            userInfo.save();
-            console.log("Update user complete");
-        });
+function updateIfNeeded(userInfo, accessToken) {
+    if(shouldIUpdate(userInfo.get("last_update"), 60 * fetchListOfEventsEveryXHours)) {
+        console.log('Updating user ' + userInfo.get("uid"));
+        fb.retrieveFbEvents(accessToken, function(data) {
+            insertEventsIntoDb(data, function() {
+                userInfo.set("last_update", new Date());
+                userInfo.set("token", accessToken);
+                userInfo.save();
+                console.log("Update user complete");
+            });
+        });            
     }
+}
+
+function shouldIUpdate(last_update, minutes) {
+    if((last_update == undefined) || (last_update < moment().subtract('minutes', minutes))) {
+        return true;
+    }
+    return false;   
 }
 
 function insertEventsIntoDb(data, insertCb) {

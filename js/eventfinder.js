@@ -45,6 +45,13 @@ function updateMarkers() {
     
     var combo = document.getElementById("whenCombo");
     var whenSelection = combo.options[combo.selectedIndex].text;
+    
+    $.get(getRequestString(whenSelection, properties), {}).then(function(resultsJson) {
+        printResults(resultsJson);
+    });    
+}
+
+function getRequestString(whenSelection, properties) {
     var startDate;
     var endDate;
     if(whenSelection == "Tomorrow") {
@@ -66,9 +73,7 @@ function updateMarkers() {
     requestString += "&topLeftLon=" + topLeft.longitude;
     requestString += "&start=" + startDate.format();
     requestString += "&end=" + endDate.format();
-    $.get(requestString, {}).then(function(resultsJson) {
-        printResults(resultsJson);
-    });    
+    return requestString;   
 }
 
 function handleLogin() {
@@ -98,17 +103,10 @@ function handleLogin() {
             });
             retrieveFbEvents(function(results) {
                 console.log("login");
-                $.post("/login", {uid: uid, token : accessToken, data : results.data}, null, "json");
+                $.post("/login", {uid: uid, token : accessToken}, null, "json");
             });
         }
     });
-}
-
-function retrieveFbEvents(cb) {
-    var eventLimitForFbQuery = 100;
-    var maxFriends = 300;
-    var query = "SELECT eid FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now()AND eid IN(SELECT eid FROM event_member WHERE start_time > now()AND(uid=me()OR uid IN(SELECT uid2 FROM friend WHERE uid1=me() LIMIT " + maxFriends+ "))ORDER BY start_time ASC LIMIT "+ eventLimitForFbQuery +")ORDER BY start_time ASC";
-    FB.api('/fql?q='+escape(query), 'get', cb);
 }
 
 function getContent(entry) {

@@ -22,6 +22,11 @@ function fbQuery() {
 	    });
 	}
 
+	this.retrieveFbEvents=retrieveFbEvents;
+	function retrieveFbEvents(token, cb) {    
+	    this.fb.executeFbQueryWithSpecificToken(retrieveFbEvents_Query(), token, cb);
+	}
+
 	function retrieveEventInfo_Query(eid) {
 	    return "{"+
 	        "\"theevent\":\"select eid, name, attending_count, unsure_count, location, venue.id, start_time, end_time from event where eid='"+eid+"'\"," +
@@ -40,6 +45,13 @@ function fbQuery() {
 	     return number;
 	   }
 	   return null;//event has a hidden guest list
+	}
+
+	function retrieveFbEvents_Query() {
+	    var eventLimitForFbQuery = 100;
+	    var maxFriends = 300;
+	    var query = "SELECT eid FROM event WHERE privacy='OPEN' AND venue.id <> '' AND start_time > now()AND eid IN(SELECT eid FROM event_member WHERE start_time > now()AND(uid=me()OR uid IN(SELECT uid2 FROM friend WHERE uid1=me() LIMIT " + maxFriends+ "))ORDER BY start_time ASC LIMIT "+ eventLimitForFbQuery +")ORDER BY start_time ASC";
+	    return query;
 	}
 
 }
