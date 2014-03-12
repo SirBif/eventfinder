@@ -37,6 +37,7 @@ li {
     z-index: 2;
     top : 0px;
     right: 0px;
+    float: left;
 }
 #whenCombo {
     position: fixed;
