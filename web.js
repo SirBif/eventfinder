@@ -71,6 +71,10 @@ function updateIfNeeded(userInfo, accessToken) {
                 console.log("Update user complete");
             });
         });            
+    } else {
+    	//update the token anyways
+    	userInfo.set("token", accessToken);
+        userInfo.save();
     }
 }
 
