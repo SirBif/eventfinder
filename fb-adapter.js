@@ -41,7 +41,7 @@ function fbAdapter() {
 	                console.log('Data undefined');
 	            } else if(theData.error == undefined && theData.error_code == undefined) {
 	                //console.log('Data Retrieved');
-	                cb(theData);
+	                cb(theData.data);
 	            } else {
 	                console.log('FB query ended with error: '+ JSON.stringify(theData));   
 	            }

@@ -12,7 +12,7 @@ var app = express.createServer();
 Parse.initialize(process.env.parseAppId, process.env.parseJsKey);
 
 var parallelAsyncHttpRequests = 7;
-var fetchListOfEventsEveryXHours = 24;
+var fetchListOfEventsEveryXHours = 0;
 
 app.configure(function () {
     app.use(express.favicon(__dirname + '/misc/favicon.ico')); 
@@ -90,7 +90,11 @@ function insertEventsIntoDb(data, insertCb) {
 }
 
 function asyncInsert(eventIds, asyncCompleteCb) {
-    async.eachLimit(eventIds, parallelAsyncHttpRequests, function(eventRow, asyncCb) {db.addEvent(eventRow, asyncCb);},
+    console.log('Adding ' + eventIds.length + ' events');
+    async.eachLimit(eventIds, parallelAsyncHttpRequests,
+        function(eventRow, asyncCb) {
+            db.addEvent(eventRow, asyncCb);
+        },
         function(err) {
             if (err) {
                 console.log('Insert problem:' + err);
@@ -101,9 +105,8 @@ function asyncInsert(eventIds, asyncCompleteCb) {
     );
 }
 
-function writeSingleUpdateToDb(fbData, number, eid, cb) {
+function writeSingleUpdateToDb(data, number, eid, cb) {
     try{
-        var data = fbData.data;
         if(data[0].fql_result_set[0] == undefined) {
             cb();
             return;
