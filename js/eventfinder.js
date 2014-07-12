@@ -33,14 +33,6 @@ window.fbAsyncInit = function() {
     ref.parentNode.insertBefore(js, ref);
 }(document));
 
-var myLocation;
-(function() {
-    $.get("http://freegeoip.net/json/", "json").then(function(resultsJson) {
-        var theJson = JSON.parse(resultsJson);
-        myLocation = [theJson.latitude, theJson.longitude];
-    });
-}());
-
 function updateMarkers() {
     var properties = $('#mapContainer').jHERE();
     
@@ -82,12 +74,8 @@ function handleLogin() {
         if (response.status === 'connected') {
             var uid = response.authResponse.userID;
             var accessToken = response.authResponse.accessToken;
-            if(myLocation == undefined) {
-                myLocation = [44.843699,11.619072];
-            }
             $('#mapContainer').jHERE({
                 enable: ['behavior', 'positioning', 'zoombar', 'scalebar'],
-                center: myLocation,
                 zoom: 8,
                 appId: '2555Yk0ixeYKXQe2OrXM',
                 authToken: 'E5I47YZhcJA7W9P6eIebEA'
@@ -99,7 +87,6 @@ function handleLogin() {
             $('#mapContainer').jHERE('originalMap', function(map, here) {
                 map.addListener("mapviewchangeend", function() {updateMarkers();}, false);
                 //we load the markers for the 1st time
-                console.log(JSON.stringify($('#mapContainer').jHERE()));
                 updateMarkers();
             });
             $.post("/login", {uid: uid, token : accessToken}, null, "json");
